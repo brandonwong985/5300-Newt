@@ -130,7 +130,44 @@ class NewtShell {
 
 	string executeCreate(const CreateStatement *stmt) { 
 		//TODO 
-		return "In execute create";
+		string ret("CREATE TABLE ");
+		string table_name = stmt->tableName;	
+		ret += table_name;
+		ret += " (";
+		bool doComma = false;
+		for (ColumnDefinition *col: *stmt->columns) {
+			if (doComma)
+			    ret += ", ";
+			ret += get_column(col);
+			doComma  = true;
+		}
+		ret += ")";
+		return ret;
+	}
+
+	string get_column (const ColumnDefinition *col){
+		string ret;
+		switch (col->type) {
+			case ColumnDefinition::TEXT:
+				ret += col->name;
+			        ret += " TEXT";	
+				break;
+			case ColumnDefinition::INT:
+				ret += col->name;
+				ret += " INT";
+				break;
+			case ColumnDefinition::DOUBLE:
+				ret += col->name;
+				ret += " DOUBLE";
+				break;
+			default:
+				ret += col->name;
+				ret += " UNKNOWN";
+				break;
+				
+		}
+
+		return ret;	
 	}
 
 	string expression(const Expr *expr) {
