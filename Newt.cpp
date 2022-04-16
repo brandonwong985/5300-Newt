@@ -99,8 +99,6 @@ class NewtShell {
 		switch (stmt -> type()) {
 			case kStmtSelect:
 				return executeSelect((const SelectStatement *) stmt);
-			case kStmtInsert:
-				return executeInsert((const InsertStatement *) stmt);
 			case kStmtCreate:
 				return executeCreate((const CreateStatement *) stmt);
 			default:
@@ -118,18 +116,56 @@ class NewtShell {
 		    ret += expression(expr);
 		    doComma = true;
 		}
-		ret += " FROM " + table_ref(stmt->fromTable);
+		ret += " FROM " + get_table(stmt->fromTable);
 		if (stmt->whereClause != NULL)
 		    ret += " WHERE " + expression(stmt->whereClause);
 		return ret;
 	}
+	string get_table(const TableRef *table) {
+    		string ret;
+    		switch (table->type) {
+    			case kTableName:
+    				ret += table->name;
+				if (table->alias != NULL){
+                    			 ret += " AS ";
+                   			 ret += table->alias;
+               			 }	
+    				break;
+			case kTableJoin:
+    				ret += get_join_type(table);
+    				break;
+			case kTableCrossProduct:
+           			bool doComma = false;
+            			for (TableRef *tbl : *table->list) {
+                			if (doComma)
+                    				ret += ", ";
+                			ret += get_table(tbl);
+                			doComma = true;
+            			}
+    		}	
+		return ret;	
+	}
 
-	string executeInsert(const InsertStatement *stmt) { 
-		//TODO 
+	string get_join_type(const TableRef *table){
+		string ret;
+		ret += get_table(table->join->left);
+		switch(table->join->type){
+			case kJoinInner:
+               		ret += " JOIN ";
+               		break;
+           		case kJoinLeft:
+                   		 ret += " LEFT JOIN ";
+                   		 break;
+		}
+		ret += get_table(table->join->right);
+		if (table->join->condition != NULL){
+                	ret += " ON " ;
+                	ret += expression(table->join->condition);
+		}
+		return ret;
 	}
 
 	string executeCreate(const CreateStatement *stmt) { 
-		//TODO 
 		string ret("CREATE TABLE ");
 		string table_name = stmt->tableName;	
 		ret += table_name;
@@ -171,38 +207,39 @@ class NewtShell {
 	}
 
 	string expression(const Expr *expr) {
-    string ret;
-    switch (expr->type) {
-        case kExprStar:
-            ret += "*";
-            break;
-        case kExprColumnRef:
-            if (expr->table != NULL)
-                ret += string(expr->table) + ".";
-            ret += expr->name;
-            break;
-        case kExprLiteralString:
-            ret += string("\"") + expr->name + "\"";
-            break;
-        case kExprLiteralFloat:
-            ret += to_string(expr->fval);
-            break;
-        case kExprLiteralInt:
-            ret += to_string(expr->ival);
-            break;
-        case kExprFunctionRef:
-            ret += string(expr->name) + "?" + expr->expr->name;
-            break;
-        case kExprOperator:
-            ret += operator_expression(expr);
-            break;
-        default:
-            ret += "???";
-            break;
-    }
-    if (expr->alias != NULL)
-        ret += string(" AS ") + expr->alias;
-    return ret;
+	   	string ret;
+   		 switch (expr->type) {
+        	case kExprStar:
+            		ret += "*";
+           		break;
+        	case kExprColumnRef:
+            		if (expr->table != NULL)
+                		ret += string(expr->table) + ".";
+           		ret += expr->name;
+            		break;
+        	case kExprLiteralString:
+            		ret += string("\"") + expr->name + "\"";
+            		break;
+        	case kExprLiteralFloat:
+            		ret += to_string(expr->fval);
+            		break;
+        	case kExprLiteralInt:
+            		ret += to_string(expr->ival);
+            		break;
+        	case kExprFunctionRef:
+            		ret += string(expr->name) + "?" + expr->expr->name;
+            		break;
+        	case kExprOperator:
+            		ret += operator_expression(expr);
+            	break;
+        	default:
+            		ret += "???";
+            		break;
+   		 }
+    	if (expr->alias != NULL)
+        	ret += string(" AS ") + expr->alias;
+    	
+	return ret;
 }
 
 string operator_expression(const Expr *expr) {
@@ -223,75 +260,54 @@ string operator_expression(const Expr *expr) {
         case Expr::OR:
             ret += "OR";
             break;
-        case Expr::NONE:break;
-        case Expr::BETWEEN:break;
-        case Expr::CASE:break;
-        case Expr::NOT_EQUALS:break;
-        case Expr::LESS_EQ:break;
-        case Expr::GREATER_EQ:break;
-        case Expr::LIKE:break;
-        case Expr::NOT_LIKE:break;
-        case Expr::IN:break;
-        case Expr::NOT:break;
-        case Expr::UMINUS:break;
-        case Expr::ISNULL:break;
-        case Expr::EXISTS:break;
-		default:
-			ret += "???";
-			break;
+        case Expr::NONE:
+        	ret += "NONE";
+        	break;
+        case Expr::BETWEEN:
+        	ret += " BETWEEN ";
+        	break;
+        case Expr::CASE:
+        	ret += " CASE ";
+        	break;
+        case Expr::NOT_EQUALS:
+        	ret += " != ";
+        	break;
+        case Expr::LESS_EQ:
+        	ret += " <= ";
+        	break;
+        case Expr::GREATER_EQ:
+        	ret += " >= ";
+        	break;
+        case Expr::LIKE:
+        	ret += " LIKE ";
+        	break;
+        case Expr::NOT_LIKE:
+        	ret += " NOT LIKE ";
+        	break;
+        case Expr::IN:
+        	ret += " IN ";
+        	break;
+        case Expr::NOT:
+        	ret += " NOT ";
+        	break;
+        case Expr::UMINUS:
+        	ret += " UMINUS ";
+        	break;
+        case Expr::ISNULL:
+        	ret += " ISNULL ";
+        	break;
+        case Expr::EXISTS:
+        	ret += " EXISTS ";
+        	break;
+                default:
+                        ret += "???";
+                        break;
     }
     if (expr->expr2 != NULL)
         ret += " " + expression(expr->expr2);
     return ret;
 }
 
-string table_ref(const TableRef *table) {
-    string ret;
-    switch (table->type) {
-		case kTableSelect:
-			ret += "kTableSelect FIXME"; // FIXME
-			break;
-        case kTableName:
-            ret += table->name;
-            if (table->alias != NULL)
-                ret += string(" AS ") + table->alias;
-            break;
-        case kTableJoin:
-            ret += table_ref(table->join->left);
-            switch (table->join->type) {
-                case kJoinCross:
-                case kJoinInner:
-                    ret += " JOIN ";
-                    break;
-                case kJoinOuter:
-                case kJoinLeftOuter:
-                case kJoinLeft:
-                    ret += " LEFT JOIN ";
-                    break;
-                case kJoinRightOuter:
-                case kJoinRight:
-                    ret += " RIGHT JOIN ";
-                    break;
-                case kJoinNatural:
-                    ret += " NATURAL JOIN ";
-                    break;
-            }
-            ret += table_ref(table->join->right);
-            if (table->join->condition != NULL)
-                ret += " ON " + expression(table->join->condition);
-            break;
-        case kTableCrossProduct:
-            bool doComma = false;
-            for (TableRef *tbl : *table->list) {
-                if (doComma)
-                    ret += ", ";
-                ret += table_ref(tbl);
-                doComma = true;
-            }
-            break;
-    }
-    return ret;
-}
 
 
 };
