@@ -33,7 +33,7 @@ public:
 
     // Big 5 - we only need the destructor, copy-ctor, move-ctor, and op= are unnecessary
     // but we delete them explicitly just to make sure we don't use them accidentally
-    virtual ~SlottedPage() {}
+    ~SlottedPage() {};
 
     SlottedPage(const SlottedPage &other) = delete;
 
@@ -84,7 +84,7 @@ class HeapFile : public DbFile {
 public:
     HeapFile(std::string name) : DbFile(name), dbfilename(""), last(0), closed(true), db(_DB_ENV, 0) {}
 
-    virtual ~HeapFile() {}
+    virtual ~HeapFile();
 
     HeapFile(const HeapFile &other) = delete;
 
