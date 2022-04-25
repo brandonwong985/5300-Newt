@@ -29,11 +29,6 @@ class NewtShell {
 			exit(-1);
 		} 
 
-		// DbEnv env(0U);
-		// env.set_message_stream(&cout);
-		// env.set_error_stream(&cerr);
-		// env.open(raw_path, DB_CREATE | DB_INIT_MPOOL, 0);
-
 		DbEnv* env = new DbEnv(0U);
 		env->set_message_stream(&std::cout);
 		env->set_error_stream(&std::cerr);

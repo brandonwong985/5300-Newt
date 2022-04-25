@@ -82,7 +82,7 @@ protected:
  */
 class HeapFile : public DbFile {
 public:
-    HeapFile(std::string name) : DbFile(name), dbfilename(""), last(0), closed(true), db(_DB_ENV, 0) {}
+    HeapFile(std::string name) : DbFile(name), dbfilename(name), last(0), closed(true), db(_DB_ENV, 0) {}
 
     virtual ~HeapFile();
 
@@ -151,22 +151,22 @@ public:
 
     virtual Handle insert(const ValueDict *row);
 
-    virtual void update(const Handle handle, const ValueDict *new_values);
+    //virtual void update(const Handle handle, const ValueDict *new_values);
 
-    virtual void del(const Handle handle);
+    //virtual void del(const Handle handle);
 
-    virtual Handles *select();
+    //virtual Handles *select();
 
     virtual Handles *select(const ValueDict *where);
 
-    virtual ValueDict *project(Handle handle);
+    //virtual ValueDict *project(Handle handle);
 
     virtual ValueDict *project(Handle handle, const ColumnNames *column_names);
 
 protected:
     HeapFile file;
 
-    virtual ValueDict *validate(const ValueDict *row);
+    virtual bool *validate(const ValueDict *row);
 
     virtual Handle append(const ValueDict *row);
 

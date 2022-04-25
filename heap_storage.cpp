@@ -10,14 +10,14 @@ typedef u_int16_t u16;
 /**********************************************SLOTTEDPAGE CLASS***********************************************/
 
 SlottedPage::SlottedPage(Dbt &block, BlockID block_id, bool is_new) : DbBlock(block, block_id, is_new) {
-        if (is_new) {
-            this->num_records = 0;
-            this->end_free = DbBlock::BLOCK_SZ - 1;
-            put_header();
-        } else {
-            get_header(this->num_records, this->end_free);
-        }
+    if (is_new) {
+        this->num_records = 0;
+        this->end_free = DbBlock::BLOCK_SZ - 1;
+        put_header();
+    } else {
+        get_header(this->num_records, this->end_free);
     }
+}
 
 // Add a new record to the block. Return its id.
 RecordID SlottedPage::add(const Dbt* data) {
@@ -191,25 +191,37 @@ HeapFile::~HeapFile() {
 }
 
 void HeapFile::create() {
-    //TODO
+    //CHECKME
+    db_open(DB_CREATE|DB_EXCL);
+    SlottedPage* tmp(this->get_new());
+    this->put(tmp);
+
 }
 
 void HeapFile::drop() {
-    //TODO
+    //CHECKME
+    close();
+
+    if (std::remove(dbfilename.c_str()) != 0)
+        throw "Cannot drop relation";
 }
 
 void HeapFile::open() {
-    //TODO
+    //CHECKME
+    db_open();
 }
 
 void HeapFile::close() {
-    //TODO
+    //CHECKME
+    closed = true;
+    u_int32_t flags = 0;
+    db.close(flags);
 }
 
 // Allocate a new block for the database file.
 // Returns the new empty DbBlock that is managing the records in this block and its block id.
-SlottedPage* HeapFile::get_new(void) {
-    char block[DbBlock::BLOCK_SZ];
+SlottedPage* HeapFile::get_new() {
+    char* block = new char[DbBlock::BLOCK_SZ];
     std::memset(block, 0, sizeof(block));
     Dbt data(block, sizeof(block));
 
@@ -224,15 +236,32 @@ SlottedPage* HeapFile::get_new(void) {
 }
 
 SlottedPage * HeapFile::get(BlockID block_id) {
-    //TODO
+    //CHECKME
+    if (block_id == 0) {
+         return this->get_new();
+    }
+    Dbt key(&block_id, sizeof(block_id));
+    Dbt data;
+    this->db.get(nullptr, &key, &data, 0);
+
+    return new SlottedPage(data, block_id);
 }
 
 void HeapFile::put(DbBlock *block) {
-    //TODO
+    //CHECKME
+    BlockID id = block->get_block_id();
+    Dbt key(&id, sizeof(id));
+    db.put(nullptr, &key, block->get_block(), 0);
 }
 
 BlockIDs * HeapFile::block_ids() {
-    //TODO
+    //CHECKME
+    BlockIDs* result = new BlockIDs;
+
+    for (BlockID i = 1; i <= this->last; i++)
+        result->push_back(i);
+
+    return result;
 }
 
 void HeapFile::db_open(uint flags) {
@@ -240,11 +269,19 @@ void HeapFile::db_open(uint flags) {
     if(!this->closed) {
         return;
     }
+
     db.set_message_stream(&cout);
 	db.set_error_stream(&cerr);
 	db.set_re_len(DbBlock::BLOCK_SZ); // Set record length to 4K
+
+    int success = db.open(nullptr, dbfilename.c_str(), name.c_str(), DB_RECNO, flags, 0644);
+    if (success != 0) {
+        this->close();
+    }
+    this->closed = false;
 }
 /**********************************************HEAPTABLE CLASS***********************************************/
+
 HeapTable::HeapTable(Identifier table_name, ColumnNames column_names, ColumnAttributes column_attributes)
           :DbRelation(table_name, column_names, column_attributes), file(table_name) { }
 
@@ -370,17 +407,10 @@ bool *HeapTable::validate(const ValueDict *row) {
         if (row->find(column_name) == row->end()) 
             val ==1;
     }
-
-    if (val == 0){
-        return true;
-    }
-    else {
-       return false; 
-    }
-    
 }
 
 Handle HeapTable::insert(const ValueDict *row) {
+
     file.open();
     SlottedPage *block = file.get(file.get_last_block_id());
     Dbt *data = marshal(row);
@@ -398,6 +428,3 @@ Handle HeapTable::insert(const ValueDict *row) {
 
     }
 }
-
-
-bool test_heap_storage::test_heap_storage() { }

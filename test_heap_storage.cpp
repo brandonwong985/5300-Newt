@@ -7,13 +7,17 @@ using namespace std;
 
 DbEnv *_DB_ENV;
 
-//bool test_heap_storage();
+const unsigned int NUM_OF_STRESS_RUNS = 16;
+const unsigned int STRESS_STR_SIZE = DbBlock::BLOCK_SZ/2 - 4;
+
+bool test_heap_storage();
+bool stressTest(HeapTable&, int32_t);
 
 int main(){
   _DB_ENV = new DbEnv(0U);
   _DB_ENV->set_message_stream(&cout);
 	_DB_ENV->set_error_stream(&cerr);
-	_DB_ENV->open("/home/st/trananh/PhysicalDatabase/data", DB_CREATE | DB_INIT_MPOOL, 0);
+	_DB_ENV->open("./", DB_CREATE | DB_INIT_MPOOL, 0);
 
   
   char* testStr1 = (char*) "Here, cometh the age of inquiry, not of nature but Nature Within.";
@@ -122,11 +126,85 @@ int main(){
     
   try {
     hFile.create();
-    cout << "TestRelation.poo created" << std::endl; 
+    cout << "TestRelation created" << std::endl; 
   } catch(...) {
     hFile.open();
-    cout << "TestRelation.poo opened" << std::endl; 
+    cout << "TestRelation opened" << std::endl; 
   }
+
+  cout << "\nAcquiring Slottedpage->.." << std::endl;
+  SlottedPage* block(hFile.get_new());
+  SlottedPage* block2(hFile.get_new());
+
+  std::cout << "Adding str1: " << std::endl << testStr1 << std::endl;
+  u_int16_t id3 = block->add(&testBlk1);
+  std::cout << "ID: " << id3 << std::endl;
+  std::cout << "Content: " << (char*)block->get(id3)->get_data() << endl; 
+  std::cout << std::endl;
+
+  std::cout << "Adding str2: " << std::endl << testStr2 << std::endl;
+   u_int16_t id4 = block->add(&testBlk2);
+  std::cout << "ID: " << id4 << std::endl;
+  std::cout << "Content: " << (char*)block->get(id4)->get_data() << endl;
+  std::cout << std::endl;
+
+  std::cout << "Adding str3: " << std::endl << testStr3 << std::endl;
+  u_int16_t id5 = block->add(&testBlk3);
+  std::cout << "ID: " << id5 << std::endl;
+  std::cout << "Content: " << (char*)block->get(id5)->get_data() << endl;   
+  std::cout << std::endl;
+
+  std::cout << "Adding str4: " << std::endl << testStr4 << std::endl;
+  u_int16_t id6 = block2->add(&testBlk4);
+  std::cout << "ID: " << id6 << std::endl;
+  std::cout << "Content: " << (char*)block2->get(id6)->get_data() << endl; 
+  std::cout << std::endl;
+    
+  std::cout << "Adding str5: " << std::endl << testStr5 << std::endl;
+  u_int16_t id7 = block2->add(&testBlk5);
+  std::cout << "ID: " << id7 << std::endl;
+  std::cout << "Content: " << (char*)block2->get(id7)->get_data() << endl; 
+  std::cout << std::endl;
+    
+  std::cout << "Adding str6: " << std::endl << testStr6 << std::endl;
+  u_int16_t id8 = block2->add(&testBlk6);
+  std::cout << "ID: " << id8 << std::endl;
+  std::cout << "Content: " << (char*)block2->get(id8)->get_data() << endl;  
+  std::cout << std::endl;
+    
+  std::cout << "Adding str7: " << std::endl << testStr7 << std::endl;
+  u_int16_t id9 = block2->add(&testBlk7);
+  std::cout << "ID: " << id9 << std::endl;
+  std::cout << "Content: " << (char*)block2->get(id9)->get_data() << endl; 
+  std::cout << std::endl;
+
+  // hFile.put(block);
+  // hFile.put(block2);
+
+  // for (BlockID &id : *hFile.block_ids()) {
+  //   if (id == 1) { continue; }
+  //   SlottedPage* block = hFile.get(id);
+  //   std::cout << "Block_ID: " << id << std::endl;
+  //   std::cout << "Content of Record 2: " << (char*)block->get(id4)->get_data() << endl;   
+  //   std::cout << std::endl;
+
+  // }
+
+  // std::cout << "Expected Block_ID 2: " << std::endl << testStr2 << std::endl;
+  // std::cout << "Expected Block_ID 3: " << std::endl << testStr5 << std::endl;
+  // std::cout << std::endl;
+
+  cout << "******************************TEST HEAPTABLE****************************************************" << endl;
+
+  if (test_heap_storage()){
+    std::cout << "\nProf. Lundeen's tests passed." << std::endl;
+  }else {
+    std::cout << "\nProf. Lundeen's tests FAILED!!!!" << std::endl;
+  }
+
+  hFile.drop();
+
+  delete _DB_ENV;
 
   return 0;
 }
@@ -134,6 +212,48 @@ int main(){
 
 
 // test function -- returns true if all tests pass
+bool test_heap_storage() {
+	ColumnNames column_names;
+	column_names.push_back("a");
+	column_names.push_back("b");
+	ColumnAttributes column_attributes;
+	ColumnAttribute ca(ColumnAttribute::INT);
+	column_attributes.push_back(ca);
+	ca.set_data_type(ColumnAttribute::TEXT);
+	column_attributes.push_back(ca);
+  HeapTable table1("_test_create_drop_cpp", column_names, column_attributes);
+
+  table1.create();
+  std::cout << "create ok" << std::endl;
+  
+  table1.drop();  // drop makes the object unusable because of BerkeleyDB restriction -- maybe want to fix this some day
+  std::cout << "drop ok" << std::endl;
+
+  HeapTable table("_test_data_cpp", column_names, column_attributes);
+  table.create_if_not_exists();
+  std::cout << "create_if_not_exsts ok" << std::endl;
+
+  ValueDict row;
+  row["a"] = Value(12);
+  row["b"] = Value("Hello!");
+  std::cout << "try insert" << std::endl;
+  table.insert(&row);
+  std::cout << "insert ok" << std::endl;
+  Handles* handles = table.select();
+  std::cout << "select ok " << handles->size() << std::endl;
+  ValueDict *result = table.project((*handles)[0]);
+  std::cout << "project ok" << std::endl;
+  Value value = (*result)["a"];
+  if (value.n != 12)
+    return false;
+  value = (*result)["b"];
+  if (value.s != "Hello!")
+  return false;
+  table.drop();
+
+    return true;
+}
+
 // bool test_heap_storage() {
 // 	ColumnNames column_names;
 // 	column_names.push_back("a");
@@ -143,33 +263,112 @@ int main(){
 // 	column_attributes.push_back(ca);
 // 	ca.set_data_type(ColumnAttribute::TEXT);
 // 	column_attributes.push_back(ca);
-//     HeapTable table1("_test_create_drop_cpp", column_names, column_attributes);
-//     table1.create();
-//     std::cout << "create ok" << std::endl;
-//     table1.drop();  // drop makes the object unusable because of BerkeleyDB restriction -- maybe want to fix this some day
-//     std::cout << "drop ok" << std::endl;
+//   HeapTable table1("_test_create_drop_cpp", column_names, column_attributes);
 
-//     HeapTable table("_test_data_cpp", column_names, column_attributes);
-//     table.create_if_not_exists();
-//     std::cout << "create_if_not_exsts ok" << std::endl;
+//   table1.create();
+//   std::cout << "\ncreate ok" << std::endl;
+//   table1.drop();  // drop makes the object unusable because of BerkeleyDB restriction -- maybe want to fix this some day
+//   std::cout << "\ndrop ok" << std::endl;
 
-//     ValueDict row;
-//     row["a"] = Value(12);
-//     row["b"] = Value("Hello!");
-//     std::cout << "try insert" << std::endl;
-//     table.insert(&row);
-//     std::cout << "insert ok" << std::endl;
-//     Handles* handles = table.select();
-//     std::cout << "select ok " << handles->size() << std::endl;
-//     ValueDict *result = table.project((*handles)[0]);
-//     std::cout << "project ok" << std::endl;
-//     Value value = (*result)["a"];
-//     if (value.n != 12)
-//     	return false;
-//     value = (*result)["b"];
-//     if (value.s != "Hello!")
-// 		return false;
+//   HeapTable table("_test_data_cpp", column_names, column_attributes);
+//   table.create_if_not_exists();
+//   std::cout << "\ncreate_if_not_exsts ok" << std::endl;
+
+//   ValueDict row;
+//   row["a"] = Value(12);
+//   row["b"] = Value("Hello!");
+//   std::cout << "\ntry insert" << std::endl;
+//   table.insert(&row);
+//   std::cout << "\ninsert ok" << std::endl;
+//   std::unique_ptr<Handles> handles(table.select());
+//   std::cout << "\nselect ok " << handles->size() << std::endl;
+//   std::unique_ptr<ValueDict> result (table.project((*handles)[0]));
+//   std::cout << "\nproject ok" << std::endl;
+
+//   Value value = (*result)["a"];
+//   if (value.n != 12){
 //     table.drop();
+//     return false;
+//   }
+    
+//   value = (*result)["b"];
+//   if (value.s != "Hello!"){
+//       table.drop();
+// 	return false;
+//   }
 
-//     return true;
+//   ValueDict newRow;
+//   newRow["a"] = Value(999);
+//   newRow["b"] = Value("Yikes!");
+
+//   table.update((*handles)[0], &newRow);
+//   std::cout << "\nupdate ok" << std::endl;
+//   std::unique_ptr<Handles> updatedHandles(table.select());
+
+//   std::unique_ptr<ValueDict> updatedRes (table.project((*updatedHandles)[0]));
+
+//   value = (*updatedRes)["a"];
+//   if (value.n != 999){
+//     table.drop();
+//     return false;
+//   }
+    
+//   value = (*updatedRes)["b"];
+//   if (value.s != "Yikes!"){
+//     table.drop();
+// 		return false;    
+//   }
+
+//   std::cout << "Deleting row..." << std::endl;
+    
+//   table.del((*handles)[0]);
+
+//   std::cout << "\nCommencing stress tests..." << std::endl;
+
+//   for (unsigned int i = 0; i < NUM_OF_STRESS_RUNS; i++) {
+//     if (!stressTest(table, i)){
+//       std::cout << "FAILED at stress table#" << i << std::endl;
+//       table.drop();
+//       return false;
+//     }
+//   }
+
+//   table.drop();
+
+//   return true;
 // }
+
+// bool stressTest(HeapTable& table, int32_t idx) {
+//   char stress[STRESS_STR_SIZE + 1];
+
+//   for (unsigned int i = 0; i < STRESS_STR_SIZE; i++) {
+//     stress[i] = (char) (i%sizeof(char)) - '0';
+//   }
+//   stress[STRESS_STR_SIZE] = '\0';
+//   std::string stressStr = std::string(stress);
+//   ValueDict stressRow;
+//   stressRow["a"] = Value(idx);
+//   stressRow["b"] = Value(stressStr);
+
+//   table.insert(&stressRow);
+//   std::cout << "\ninsert ok" << std::endl;
+//   std::unique_ptr<Handles> handles1(table.select());
+//   std::cout << "\nselect ok " << handles1->size() << std::endl;
+//   std::unique_ptr<ValueDict> result1 (table.project((*handles1)[idx]));
+//   std::cout << "\nproject ok" << std::endl;
+
+//   Value value1 = (*result1)["a"];
+//   if (value1.n != idx){
+//     table.drop();
+//     return false;
+//   }
+
+//   std::cout << "\nINT correct" << std::endl;
+//   value1 = (*result1)["b"];
+//   if (value1.s != stressStr) {
+//     table.drop();
+// 	  return false;
+//   }
+
+//   return true;
+// }  
