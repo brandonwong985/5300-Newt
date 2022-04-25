@@ -30,6 +30,10 @@ To exit the program, enter:
 <br />
 SQL> quit
 
+Video 
+<br />
+https://youtu.be/XwzkSQ4EcMw
+
 
 **Milestone 2:**
 -------------------------------
@@ -48,4 +52,6 @@ To perform a clean run, execute:
 $ make clean
 <br />
 
-
+Video
+<br />
+https://youtu.be/y1HccbCu7nk 
