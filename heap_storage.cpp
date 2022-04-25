@@ -393,14 +393,25 @@ void HeapFile::db_open(uint flags) {
     this->closed = false;
 }
 /**********************************************HEAPTABLE CLASS***********************************************/
-
+/**
+* @constructor for HeapTable class.
+*
+*/
 HeapTable::HeapTable(Identifier table_name, ColumnNames column_names, ColumnAttributes column_attributes)
           :DbRelation(table_name, column_names, column_attributes), file(table_name) { }
 
+/**
+* @method to CREATE TABLE
+*
+*/
 void HeapTable::create() {
     file.create();
 }
 
+/**
+* @corresponds to the SQL command CREATE TABLE IF NOT EXISTS
+*
+*/
 void HeapTable::create_if_not_exists() {
     try {
         file.open();
@@ -410,21 +421,36 @@ void HeapTable::create_if_not_exists() {
     }
 }
 
+/**
+* @opens the table for insert, update, delete, select, and project methods
+*
+*/
 void HeapTable::open() {
     file.open();
 }
 
+/**
+* @closes the table, temporarily disabling insert, update, delete, select, and project methods.
+*
+*/
 void HeapTable::close() {
     file.close();
 }
 
+/**
+* @corresponds to the SQL command DROP TABLE.
+*
+*/
 void HeapTable::drop() {
     file.drop();
 }
 
 Handles * HeapTable::select() {}
 
-// code by Kevin Lundeen
+/**
+* @corresponds to the SQL query SELECT * FROM...WHERE. Returns handles to the matching rows.
+* @code by Kevin Lundeen on canvas
+*/
 Handles* HeapTable::select(const ValueDict* where) {
     Handles* handles = new Handles();
     BlockIDs* block_ids = file.block_ids();
@@ -440,6 +466,10 @@ Handles* HeapTable::select(const ValueDict* where) {
     return handles;
 }
 
+/**
+* @method corresponds to the SQL command INSERT INTO TABLE.
+*
+*/
 Handle HeapTable::insert(const ValueDict *row) {
 
     file.open();
@@ -466,6 +496,10 @@ void HeapTable::del(const Handle handle) {}
 
 ValueDict * HeapTable::project(Handle handle) {}
 
+/**
+* @extracts specific fields from a row handle (a projection).
+*
+*/
 ValueDict* HeapTable::project(Handle handle, const ColumnNames *column_names) {
     open();
     BlockID block_id = handle.first;
@@ -482,9 +516,10 @@ ValueDict* HeapTable::project(Handle handle, const ColumnNames *column_names) {
     return res;
 }
 
-// return the bits to go into the file
-// caller responsible for freeing the returned Dbt and its enclosed ret->get_data().
-// code by Kevin Lundeen
+/**
+* @return the bits to go into the file
+* @code by Kevin Lundeen
+*/
 Dbt* HeapTable::marshal(const ValueDict* row) {
     char *bytes = new char[DbBlock::BLOCK_SZ]; // more than we need (we insist that one row fits into DbBlock::BLOCK_SZ)
     uint offset = 0;
@@ -514,7 +549,10 @@ Dbt* HeapTable::marshal(const ValueDict* row) {
     return data;
 }
 
-//similar to marshal
+/**
+* @similar to marshal.
+* 
+*/
 ValueDict* HeapTable::unmarshal(Dbt *data) {
     ValueDict *row = new ValueDict;
     char *bytes = (char *)data->get_data();
