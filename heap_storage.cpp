@@ -310,6 +310,8 @@ void HeapTable::drop() {
     file.drop();
 }
 
+Handles * HeapTable::select() {}
+
 // code by Kevin Lundeen
 Handles* HeapTable::select(const ValueDict* where) {
     Handles* handles = new Handles();
@@ -325,6 +327,32 @@ Handles* HeapTable::select(const ValueDict* where) {
     delete block_ids;
     return handles;
 }
+
+Handle HeapTable::insert(const ValueDict *row) {
+
+    file.open();
+    SlottedPage *block = file.get(file.get_last_block_id());
+    Dbt *data = marshal(row);
+    BlockID block_id;
+    RecordID record_id;
+
+    if (validate(row)){
+        try{
+            record_id = block->add(data);
+        }
+        catch(...){
+            block = this->file.get_new();
+            record_id = block->add(data);
+        }
+
+    }
+}
+
+void HeapTable::update(const Handle handle, const ValueDict *new_values) {}
+
+void HeapTable::del(const Handle handle) {}
+
+ValueDict * HeapTable::project(Handle handle) {}
 
 ValueDict* HeapTable::project(Handle handle, const ColumnNames *column_names) {
     open();
@@ -409,22 +437,5 @@ bool *HeapTable::validate(const ValueDict *row) {
     }
 }
 
-Handle HeapTable::insert(const ValueDict *row) {
+Handle HeapTable::append(const ValueDict *row) {};
 
-    file.open();
-    SlottedPage *block = file.get(file.get_last_block_id());
-    Dbt *data = marshal(row);
-    BlockID block_id;
-    RecordID record_id;
-
-    if (validate(row)){
-        try{
-            record_id = block->add(data);
-        }
-        catch(...){
-            block = this->file.get_new();
-            record_id = block->add(data);
-        }
-
-    }
-}

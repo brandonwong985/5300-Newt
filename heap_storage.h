@@ -151,15 +151,15 @@ public:
 
     virtual Handle insert(const ValueDict *row);
 
-    //virtual void update(const Handle handle, const ValueDict *new_values);
+    virtual void update(const Handle handle, const ValueDict *new_values);
 
-    //virtual void del(const Handle handle);
+    virtual void del(const Handle handle);
 
-    //virtual Handles *select();
+    virtual Handles *select();
 
     virtual Handles *select(const ValueDict *where);
 
-    //virtual ValueDict *project(Handle handle);
+    virtual ValueDict *project(Handle handle);
 
     virtual ValueDict *project(Handle handle, const ColumnNames *column_names);
 
