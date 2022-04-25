@@ -7,6 +7,7 @@
  * 
  * @author Anh Tran, Sanchita Jain
  * @bug Segmentation fault when testing HeapTable. SlottedPage and HeapFile passed tests.
+ * @bug Possible memory leaks
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 
