@@ -5,6 +5,8 @@
 #include "SQLParser.h"
 #include "sqlhelper.h"
 
+#pragma GCC diagnostic ignored "-Wswitch"
+
 using namespace std;
 using namespace hsql;
 
@@ -14,9 +16,7 @@ DbEnv* _DB_ENV;
 class NewtShell {
 	public:
 	int run(int argc, char* argv[]) {
-
-		if (argc != 2)
-		{
+		if (argc != 2) {
 			cout << "Usage: sql5300 DbEnvPath" << endl;
 			exit(-1);
 		}
@@ -37,43 +37,32 @@ class NewtShell {
 
 		_DB_ENV = env;
 
-	// initialize_schema_tables();
-
 		cout << "(sql5300: running with database environment at " << raw_path << ")" << endl;
 
 		while(true) {
-			cout << "SQL> ";
-			
+			cout << "SQL> ";			
 			string query;
 			getline(cin, query);
 
-			if (query.length() == 0)
-			{
+			if (query.length() == 0) {
 				continue;
 			}
 
 			transform(query.begin(), query.end(), query.begin(), ::tolower);
 
-			if (query == "quit")
-			{
+			if (query == "quit") {
 				return 0;
 			} 
 			
-
 			// parse a given query
 			SQLParserResult* result = hsql::SQLParser::parseSQLString(query);
 
 			// check whether the parsing was successful
 			if (result->isValid()) {
-				// printf("Parsed successfully!\n");
-				// printf("Number of statements: %lu\n", result->size());
-
 				for (uint i = 0; i < result->size(); ++i) {
 					string statement = execute(result->getStatement(i));
-					cout << statement << endl;
-					
+					cout << statement << endl;					
 				}
-
 				delete result;
 			} else {
 				fprintf(stderr, "Given string is not a valid SQL query.\n");
@@ -83,9 +72,7 @@ class NewtShell {
 						result->errorColumn());
 				delete result;
 			}
-
 		}
-
 	}
 
 	private:
