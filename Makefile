@@ -8,10 +8,10 @@ test: test_heap_storage.o heap_storage.o
 test_heap_storage.o: test_heap_storage.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-sql5300: Newt.o heap_storage.o
+sql5300: sql5300.o heap_storage.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
-sql5300.o: Newt.cpp
+sql5300.o: sql5300.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 heap_storage.o : heap_storage.cpp heap_storage.h storage_engine.h
