@@ -77,7 +77,27 @@ QueryResult *SQLExec::create(const CreateStatement *statement) {
 
 // DROP ...
 QueryResult *SQLExec::drop(const DropStatement *statement) {
-    return new QueryResult("not implemented"); // FIXME
+    if (statement->type != hsql::DropStatement::kTable){
+        throw SQLExecError("Unrecognized DROP type");
+    }
+    ValueDict where;
+    Identifier table_name = statement->name;
+    
+    // Get table to drop
+    DbRelation &table = SQLExec::tables->get_table(table_name);   
+    where["table_name"] = Value(table_name);
+
+    Handles *handles = table.select(&where);
+
+    for (auto const &handle: *handles){
+        table.del(handle);
+    }
+    delete handles;
+
+    table.drop();
+    SQLExec::tables->del(*SQLExec::tables->select(&where)->begin());
+
+    return new QueryResult(string("dropped ") + table_name);
 }
 
 QueryResult *SQLExec::show(const ShowStatement *statement) {
