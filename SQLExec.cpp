@@ -155,14 +155,14 @@ QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
     Handles *handles = table.select();
     int count = 0;
 
-    columnNames->push_back("table_name");
-    columnNames->push_back("column_name");
-    columnNames->push_back("data_type");
+    SQLExec::tables->get_columns(table_name, *columnNames, *columnAttributes);
 
-    ColumnAttribute column_attribute;
     for (auto const &handle: *handles) {
-        // TODO: get column values
+        ValueDict *row = table.project(handle); 
+        rows->push_back(row);
+
         count++;
+        delete row;
     }
     delete handles;
 
