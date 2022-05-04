@@ -109,7 +109,15 @@ QueryResult *SQLExec::drop(const DropStatement *statement) {
 }
 
 QueryResult *SQLExec::show(const ShowStatement *statement) {
-    return new QueryResult("not implemented"); // FIXME
+       // checks for 2 conditions -> show tables and show columns
+    switch (statement->type) {
+        case ShowStatement::kTables:
+            return show_tables();
+        case ShowStatement::kColumns:
+            return show_columns(statement);
+        default:
+            return new QueryResult("not implemented");
+    }
 }
 
 QueryResult *SQLExec::show_tables() {
