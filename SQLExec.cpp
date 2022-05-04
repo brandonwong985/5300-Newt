@@ -84,7 +84,7 @@ QueryResult *SQLExec::drop(const DropStatement *statement) {
         throw SQLExecError("Unrecognized DROP type");
     }
 
-    if (Value(statement->name) == SQLExec::tables->TABLE_NAME || Value(statement->name) == Value("_columns")){
+    if (Value(statement->name) == Tables::TABLE_NAME || Value(statement->name) == Columns::TABLE_NAME){
         throw SQLExecError("Cannot drop a schema table");
     }
 
@@ -109,7 +109,7 @@ QueryResult *SQLExec::drop(const DropStatement *statement) {
 }
 
 QueryResult *SQLExec::show(const ShowStatement *statement) {
-       // checks for 2 conditions -> show tables and show columns
+    // checks for 2 conditions -> show tables and show columns
     switch (statement->type) {
         case ShowStatement::kTables:
             return show_tables();
@@ -121,7 +121,25 @@ QueryResult *SQLExec::show(const ShowStatement *statement) {
 }
 
 QueryResult *SQLExec::show_tables() {
-    return new QueryResult("not implemented"); // FIXME
+    // get all tables
+    Handles *handles = SQLExec::tables->select();
+    ColumnNames *columnNames = new ColumnNames();
+    ValueDicts *rows = new ValueDicts();
+    int count = 0;
+
+    columnNames->push_back("table_name");
+    
+    for (auto const &handle: *handles){
+        ValueDict *row = SQLExec::tables->project(handle, columnNames);
+        Identifier table = row->at("table_name").s;
+        if (table == Tables::TABLE_NAME || table == Columns::TABLE_NAME){
+            continue;
+        }
+        count++;
+        rows->push_back(row);
+    }
+
+    return new QueryResult(columnNames, new ColumnAttributes(), rows, "successfully returned " + to_string(count) + " rows"); 
 }
 
 QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
