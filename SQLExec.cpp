@@ -137,12 +137,35 @@ QueryResult *SQLExec::show_tables() {
         }
         count++;
         rows->push_back(row);
+        delete row;
     }
+    delete handles;
 
     return new QueryResult(columnNames, new ColumnAttributes(), rows, "successfully returned " + to_string(count) + " rows"); 
 }
 
-QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
-    return new QueryResult("not implemented"); // FIXME
+QueryResult *SQLExec::show_columns(const ShowStatement *statement) {   
+    Identifier table_name = statement->tableName;
+    DbRelation &table = SQLExec::tables->get_table(table_name);   
+
+    ColumnNames *columnNames = new ColumnNames();
+    ColumnAttributes *columnAttributes = new ColumnAttributes();
+    ValueDicts *rows = new ValueDicts();
+
+    Handles *handles = table.select();
+    int count = 0;
+
+    columnNames->push_back("table_name");
+    columnNames->push_back("column_name");
+    columnNames->push_back("data_type");
+
+    ColumnAttribute column_attribute;
+    for (auto const &handle: *handles) {
+        // TODO: get column values
+        count++;
+    }
+    delete handles;
+
+    return new QueryResult(columnNames, columnAttributes, rows,  "successfully returned " + to_string(count) + " rows");
 }
 
