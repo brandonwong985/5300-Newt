@@ -69,13 +69,17 @@ QueryResult *SQLExec::execute(const SQLStatement *statement) {
     }
 }
 
-void
-SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_name, ColumnAttribute &column_attribute) {
+void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_name, ColumnAttribute &column_attribute) {
     throw SQLExecError("not implemented");  // FIXME
 }
 
 QueryResult *SQLExec::create(const CreateStatement *statement) {
-    return new QueryResult("not implemented"); // FIXME
+    ValueDict row;
+    Identifier table_name = statement->tableName;
+    row["table_name"] = table_name;
+    SQLExec::tables->insert(&row);
+
+    return new QueryResult("created " + table_name); 
 }
 
 // DROP ...
