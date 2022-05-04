@@ -48,7 +48,10 @@ QueryResult::~QueryResult() {
 
 
 QueryResult *SQLExec::execute(const SQLStatement *statement) {
-    // FIXME: initialize _tables table, if not yet present
+    // initialize _tables table, if not yet present
+    if (SQLExec::tables == nullptr){
+        SQLExec::tables = new Tables();
+    }
 
     try {
         switch (statement->type()) {
@@ -80,6 +83,11 @@ QueryResult *SQLExec::drop(const DropStatement *statement) {
     if (statement->type != hsql::DropStatement::kTable){
         throw SQLExecError("Unrecognized DROP type");
     }
+
+    if (Value(statement->name) == SQLExec::tables->TABLE_NAME || Value(statement->name) == Value("_columns")){
+        throw SQLExecError("Cannot drop a schema table");
+    }
+
     ValueDict where;
     Identifier table_name = statement->name;
     
