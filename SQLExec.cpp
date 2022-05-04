@@ -70,7 +70,7 @@ QueryResult *SQLExec::execute(const SQLStatement *statement) {
 }
 
 void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_name, ColumnAttribute &column_attribute) {
-    throw SQLExecError("not implemented");  // FIXME
+    
 }
 
 QueryResult *SQLExec::create(const CreateStatement *statement) {
@@ -78,6 +78,9 @@ QueryResult *SQLExec::create(const CreateStatement *statement) {
     Identifier table_name = statement->tableName;
     row["table_name"] = table_name;
     SQLExec::tables->insert(&row);
+
+    // Update columns schema
+
 
     return new QueryResult("created " + table_name); 
 }
@@ -155,17 +158,18 @@ QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
     ColumnAttributes *columnAttributes = new ColumnAttributes();
     ValueDicts *rows = new ValueDicts();
 
-    Handles *handles = table.select();
     int count = 0;
+    Handles *handles = table.select(); 
 
     SQLExec::tables->get_columns(table_name, *columnNames, *columnAttributes);
 
     for (auto const &handle: *handles) {
-        ValueDict *row = table.project(handle); 
-        rows->push_back(row);
-
-        count++;
-        delete row;
+        ValueDict *row = table.project(handle, columnNames); 
+        Identifier table = row->at("table_name").s;
+        if (table == table_name){
+            rows->push_back(row);
+            count++;
+        }
     }
     delete handles;
 
