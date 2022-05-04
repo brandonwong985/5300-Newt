@@ -141,7 +141,6 @@ QueryResult *SQLExec::show_tables() {
         }
         count++;
         rows->push_back(row);
-        delete row;
     }
     delete handles;
 
