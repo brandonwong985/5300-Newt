@@ -70,19 +70,56 @@ QueryResult *SQLExec::execute(const SQLStatement *statement) {
 }
 
 void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_name, ColumnAttribute &column_attribute) {
-    
+    column_name = col->name;
+    switch (col->type) {
+        case ColumnDefinition::INT:
+            column_attribute.set_data_type(ColumnAttribute::INT);
+            break;
+        case ColumnDefinition::TEXT:
+            column_attribute.set_data_type(ColumnAttribute::TEXT);
+            break;
+        default:
+            throw SQLExecError("Data type not implemented");
+    }
 }
 
 QueryResult *SQLExec::create(const CreateStatement *statement) {
+    // Updated table schema
     ValueDict row;
-    Identifier table_name = statement->tableName;
-    row["table_name"] = table_name;
+    Identifier tableName = statement->tableName;
+    row["table_name"] = tableName;   
     SQLExec::tables->insert(&row);
 
-    // Update columns schema
+    Identifier columnName;
+    ColumnAttribute columnAttribute;  
 
+    DbRelation &table = SQLExec::tables->get_table(tableName); 
+    DbRelation &columns = SQLExec::tables->get_table(Columns::TABLE_NAME);  
+ 
+    try{ 
+        // Updated column schema      
+        for (auto const &col: *statement->columns){
+            column_definition((const ColumnDefinition *)col, columnName, columnAttribute);
+            row["column_name"] = columnName;
+            row["data_type"] = Value(columnAttribute.get_data_type());
+            columns.insert(&row);
+        }
+        try{
+            // Create table
+            table.create();
+        }catch (...){
+            try{
+                // Undo insertions into _columns
+            }catch (...) { }
+        }
+    }
+    catch (...){        
+        try{
+            // Undo insertion into _tables
+        }catch (...){ }
+    }
 
-    return new QueryResult("created " + table_name); 
+    return new QueryResult("created " + tableName);
 }
 
 // DROP ...
@@ -152,7 +189,7 @@ QueryResult *SQLExec::show_tables() {
 
 QueryResult *SQLExec::show_columns(const ShowStatement *statement) {   
     Identifier table_name = statement->tableName;
-    DbRelation &table = SQLExec::tables->get_table(Columns::TABLE_NAME);   
+    DbRelation &columns = SQLExec::tables->get_table(Columns::TABLE_NAME);   
 
     ColumnNames *columnNames = new ColumnNames();
     ColumnAttributes *columnAttributes = new ColumnAttributes();
@@ -166,11 +203,10 @@ QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
     int count = 0;
     ValueDict where;
     where["table_name"] = Value(table_name);
-    Handles *handles = table.select(&where); ;
+    Handles *handles = columns.select(&where); ;
 
     for (auto const &handle: *handles) {
-        ValueDict *row = table.project(handle, columnNames); 
-        Identifier table = row->at("table_name").s;
+        ValueDict *row = columns.project(handle, columnNames); 
         rows->push_back(row);
         count++;
     }
