@@ -152,24 +152,27 @@ QueryResult *SQLExec::show_tables() {
 
 QueryResult *SQLExec::show_columns(const ShowStatement *statement) {   
     Identifier table_name = statement->tableName;
-    DbRelation &table = SQLExec::tables->get_table(table_name);   
+    DbRelation &table = SQLExec::tables->get_table(Columns::TABLE_NAME);   
 
     ColumnNames *columnNames = new ColumnNames();
     ColumnAttributes *columnAttributes = new ColumnAttributes();
     ValueDicts *rows = new ValueDicts();
 
+    columnNames->push_back("table_name");
+    columnNames->push_back("column_name");
+    columnNames->push_back("data_type");
+    columnAttributes->push_back(ColumnAttribute::TEXT);
+    
     int count = 0;
-    Handles *handles = table.select(); 
-
-    SQLExec::tables->get_columns(table_name, *columnNames, *columnAttributes);
+    ValueDict where;
+    where["table_name"] = Value(table_name);
+    Handles *handles = table.select(&where); ;
 
     for (auto const &handle: *handles) {
         ValueDict *row = table.project(handle, columnNames); 
         Identifier table = row->at("table_name").s;
-        if (table == table_name){
-            rows->push_back(row);
-            count++;
-        }
+        rows->push_back(row);
+        count++;
     }
     delete handles;
 
