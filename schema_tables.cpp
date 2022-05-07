@@ -134,7 +134,7 @@ void Tables::get_columns(Identifier table_name, ColumnNames &column_names, Colum
 // Return a table for given table_name.
 DbRelation &Tables::get_table(Identifier table_name) {
     // if they are asking about a table we've once constructed, then just return that one
-    if (Tables::table_cache.find(table_name) != Tables::table_cache.end())
+    if (Tables::table_cache.find(table_name) != Tables::table_cache.end())       
         return *Tables::table_cache[table_name];
 
     // otherwise assume it is a HeapTable (for now)

@@ -43,7 +43,7 @@ ostream &operator<<(ostream &out, const QueryResult &qres) {
 }
 
 QueryResult::~QueryResult() {
-    // FIXME
+
 }
 
 
@@ -88,21 +88,35 @@ QueryResult *SQLExec::create(const CreateStatement *statement) {
     ValueDict row;
     Identifier tableName = statement->tableName;
     row["table_name"] = tableName;   
-    SQLExec::tables->insert(&row);
+    Handle table_handle = SQLExec::tables->insert(&row);
 
     Identifier columnName;
-    ColumnAttribute columnAttribute;  
+    ColumnAttribute columnAttribute; 
+    ColumnNames columnNames;
+    ColumnAttributes columnAttributes;
 
     DbRelation &table = SQLExec::tables->get_table(tableName); 
     DbRelation &columns = SQLExec::tables->get_table(Columns::TABLE_NAME);  
- 
-    try{ 
-        // Updated column schema      
-        for (auto const &col: *statement->columns){
-            column_definition((const ColumnDefinition *)col, columnName, columnAttribute);
-            row["column_name"] = columnName;
-            row["data_type"] = Value(columnAttribute.get_data_type());
-            columns.insert(&row);
+    
+    for (auto const &col: *statement->columns){
+        column_definition((const ColumnDefinition *)col, columnName, columnAttribute);
+        columnNames.push_back(columnName);
+        columnAttributes.push_back(columnAttribute);
+    }
+
+    try{        
+        // Updated column schema   
+        Handles col_handle;   
+        for (uint i = 0; i < columnNames.size(); i++){
+            row["column_name"] = columnNames[i];
+            if (columnAttributes[i].get_data_type() == ColumnAttribute::INT){
+                row["data_type"] = Value("INT");
+            }else if (columnAttributes[i].get_data_type() == ColumnAttribute::TEXT){
+                row["data_type"] = Value("TEXT");
+            }else{
+                throw SQLExecError("Column data type not implemented");
+            }
+            col_handle.push_back(columns.insert(&row));
         }
         try{
             // Create table
@@ -110,13 +124,19 @@ QueryResult *SQLExec::create(const CreateStatement *statement) {
         }catch (...){
             try{
                 // Undo insertions into _columns
+                for (uint i = 0; i < columnNames.size(); i++){
+                    columns.del(col_handle.at(i));
+                }
             }catch (...) { }
+            throw;
         }
     }
     catch (...){        
         try{
             // Undo insertion into _tables
+            SQLExec::tables->del(table_handle);
         }catch (...){ }
+        throw;
     }
 
     return new QueryResult("created " + tableName);
