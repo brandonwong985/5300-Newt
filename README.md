@@ -1,6 +1,6 @@
 # 5300-Newt
 
-CPSC 5300 Sprint Verano, Seattle University, Spring 2022
+### CPSC 5300 Sprint Verano, Seattle University, Spring 2022
 
 Authors: Anh Tran, Sanchita Jain
 
@@ -55,3 +55,35 @@ $ make clean
 Video
 <br />
 https://youtu.be/y1HccbCu7nk 
+
+### CPSC 5300 Sprint Otono, Seattle University, Spring 2022
+
+Authors: Helen Huang
+
+**HAND-OFF VIDEO**: 
+
+
+**Milestone 3:**
+--------------------------------
+
+This milestone is a C++ program that runs from the command line and allows users to input statement, parsing the input statement into a formatted SQL statement and executing create, drop, show_tables, show_columns from existing tables.
+
+To build the program, enter:
+<br />
+$ make
+
+To run the program, enter: 
+<br />
+$ ./sql5300 env_path
+<br />
+where the env_path is the directory holding Berkeley DB database files.
+
+When run, the terminal will appear a SQL entry where users can enter the input statement like below: 
+<br />
+SQL>
+
+To exit the program, enter: 
+<br />
+SQL> quit
+
+
