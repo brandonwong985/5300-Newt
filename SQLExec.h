@@ -68,15 +68,19 @@ protected:
     // the one place in the system that holds the _tables table
     static Tables *tables;
 
-    // recursive decent into the AST
+    // Execute SQL statement for creating a table
     static QueryResult *create(const hsql::CreateStatement *statement);
 
+    // Execute SQL statement for dropping a table
     static QueryResult *drop(const hsql::DropStatement *statement);
 
+    // Execute SQL statement for showing tables/showing columns from table
     static QueryResult *show(const hsql::ShowStatement *statement);
 
+    // Execute SQL statement for showing showing tables
     static QueryResult *show_tables();
 
+    // Execute SQL statemnet foe showing columns
     static QueryResult *show_columns(const hsql::ShowStatement *statement);
 
     /**
