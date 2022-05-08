@@ -43,6 +43,20 @@ ostream &operator<<(ostream &out, const QueryResult &qres) {
 }
 
 QueryResult::~QueryResult() {
+    if (column_names != nullptr){
+        delete column_names;
+    }
+    
+    if (column_attributes != nullptr){
+        delete column_attributes;
+    }
+
+    if (rows != nullptr){
+        for (auto row: *rows){
+            delete row;
+        }
+        delete rows;
+    }
 }
 
 
@@ -153,14 +167,15 @@ QueryResult *SQLExec::drop(const DropStatement *statement) {
     ValueDict where;
     Identifier table_name = statement->name;
     
-    // Get table to drop
+    // Get table in _tables to drop
     DbRelation &table = SQLExec::tables->get_table(table_name);   
     where["table_name"] = Value(table_name);
 
-    Handles *handles = table.select(&where);
-
+    // Get rows in _columns to drop
+    DbRelation &columns = SQLExec::tables->get_table(Columns::TABLE_NAME);
+    Handles *handles = columns.select(&where);
     for (auto const &handle: *handles){
-        table.del(handle);
+        columns.del(handle);
     }
     delete handles;
 
