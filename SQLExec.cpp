@@ -65,6 +65,7 @@ QueryResult *SQLExec::execute(const SQLStatement *statement) {
     // initialize _tables table, if not yet present
     if (SQLExec::tables == nullptr){
         SQLExec::tables = new Tables();
+        SQLExec::indices = new Indices();
     }
 
     try {
