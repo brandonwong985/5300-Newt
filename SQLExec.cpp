@@ -365,3 +365,10 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
     return new QueryResult("dropped index " + indexName);  // FIXME
 }
 
+bool test_sql_tables(){
+    return true;
+}
+
+bool test_sql_indices(){
+    return true;
+}
