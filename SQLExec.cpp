@@ -10,6 +10,7 @@ using namespace hsql;
 
 // define static data
 Tables *SQLExec::tables = nullptr;
+Indices *SQLExec::indices = nullptr;
 
 // make query result be printable
 ostream &operator<<(ostream &out, const QueryResult &qres) {
@@ -221,7 +222,7 @@ QueryResult *SQLExec::show_tables() {
     for (auto const &handle: *handles){
         ValueDict *row = SQLExec::tables->project(handle, column_names);
         Identifier table = row->at("table_name").s;
-        if (table == Tables::TABLE_NAME || table == Columns::TABLE_NAME){
+        if (table == Tables::TABLE_NAME || table == Columns::TABLE_NAME || table == Indices::TABLE_NAME){
             continue;
         }
         count++;
@@ -261,7 +262,50 @@ QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
 }
 
 QueryResult *SQLExec::create_index(const CreateStatement *statement) {
-     return new QueryResult("create index not implemented"); // FIXME
+     Identifier table_name = statement->tableName;
+     Identifier index_name = statement->indexName;
+     Identifier index_type;
+     DbIndex &index = SQLExec::indices->get_index(table_name, index_name);  
+     bool unique = true;
+
+     try {
+         index_type = statement->indexType;
+     }catch (exception& e){
+         index_type = "BTREE";
+     }
+
+     if (index_type != "BTREE"){ 
+         unique = false;
+     }
+
+     ValueDict row;
+     int seq = 0;
+
+     row["table_name"] = table_name;
+     row["index_name"] = index_name;
+     row["seq_in_index"] = seq;
+     row["index_type"] = index_type;
+     row["is_unique"] = unique;
+
+     Handles handles;
+     try{
+         for (auto const &col: *statement->indexColumns){
+             seq += 1;
+             row["seq_in_index"] = seq;
+             row["column_name"] = Value(col);
+             handles.push_back(SQLExec::indices->insert(&row));
+         }
+         // Create index
+         index.create();
+     } catch (exception& e){
+         try{
+             for (unsigned int i = 0; i < handles.size(); i++){
+                 SQLExec::indices->del(handles.at(i));
+             }
+         }catch (...){ }
+         throw;
+     }
+     return new QueryResult("created index " + index_name);
 }
 
 QueryResult *SQLExec::show_index(const ShowStatement *statement) {
