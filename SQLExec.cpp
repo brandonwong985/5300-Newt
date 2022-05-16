@@ -206,6 +206,8 @@ QueryResult *SQLExec::show(const ShowStatement *statement) {
             return show_tables();
         case ShowStatement::kColumns:
             return show_columns(statement);
+        case ShowStatement::kIndex:
+            return show_index(statement);
         default:
             return new QueryResult("not implemented");
     }
@@ -310,7 +312,30 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
 }
 
 QueryResult *SQLExec::show_index(const ShowStatement *statement) {
-     return new QueryResult("show index not implemented"); // FIXME
+    Identifier table_name = statement->tableName;
+    ColumnNames *column_names = new ColumnNames();
+    ValueDicts *rows = new ValueDicts();
+
+    column_names->push_back("table_name");
+    column_names->push_back("index_name");
+    column_names->push_back("column_name");
+    column_names->push_back("seq_in_index");
+    column_names->push_back("index_type");
+    column_names->push_back("is_unique");
+
+    int count = 0;
+    ValueDict where;
+    where["table_name"] = Value(table_name);
+    Handles *handles = SQLExec::indices->select(&where);
+
+    for (auto const &handle: *handles) {
+        ValueDict *row = SQLExec::indices->project(handle, column_names); 
+        rows->push_back(row);
+        count++;
+    }
+    delete handles;
+
+    return new QueryResult(column_names, new ColumnAttributes(), rows,  "successfully returned " + to_string(count) + " rows");
 }
 
 QueryResult *SQLExec::drop_index(const DropStatement *statement) {
