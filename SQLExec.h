@@ -72,6 +72,8 @@ protected:
     // recursive decent into the AST
     static QueryResult *create(const hsql::CreateStatement *statement);
 
+    static QueryResult *create_table(const hsql::CreateStatement *statement);
+
     static QueryResult *drop(const hsql::DropStatement *statement);
 
     static QueryResult *show(const hsql::ShowStatement *statement);
@@ -79,6 +81,8 @@ protected:
     static QueryResult *show_tables();
 
     static QueryResult *show_columns(const hsql::ShowStatement *statement);
+
+    static QueryResult *create_index(const hsql::CreateStatement *statement);
 
     static QueryResult *drop_index(const hsql::DropStatement *statement);
 

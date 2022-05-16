@@ -97,6 +97,18 @@ void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_
 }
 
 QueryResult *SQLExec::create(const CreateStatement *statement) {
+    // checks for 2 conditions -> create table and create index
+    switch (statement->type) {
+        case CreateStatement::kTable:
+            return create_table(statement);
+        case CreateStatement::kIndex:
+            return create_index(statement);
+        default:
+            return new QueryResult("not implemented");
+    }
+}
+
+QueryResult *SQLExec::create_table(const CreateStatement *statement) {
     // Updated table schema
     ValueDict row;
     Identifier table_name = statement->tableName;
@@ -246,6 +258,10 @@ QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
     delete handles;
 
     return new QueryResult(column_names, column_attributes, rows,  "successfully returned " + to_string(count) + " rows");
+}
+
+QueryResult *SQLExec::create_index(const CreateStatement *statement) {
+     return new QueryResult("create index not implemented"); // FIXME
 }
 
 QueryResult *SQLExec::show_index(const ShowStatement *statement) {
