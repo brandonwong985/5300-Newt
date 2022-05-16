@@ -76,6 +76,8 @@ protected:
 
     static QueryResult *drop(const hsql::DropStatement *statement);
 
+    static QueryResult *drop_table(const hsql::DropStatement *statement);
+
     static QueryResult *show(const hsql::ShowStatement *statement);
 
     static QueryResult *show_tables();

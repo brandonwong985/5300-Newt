@@ -38,17 +38,21 @@ int main(int argc, char *argv[]) {
         cout << "SQL> ";
         string query;
         getline(cin, query);
-        if (query.length() == 0)
+        if (query.length() == 0){
             continue;  // blank line -- just skip
-        if (query == "quit")
+        }
+        if (query == "quit"){
             break;  // only way to get out
-        if (query == "test_verano") 
+        }            
+        if (query == "test_verano") {
             cout << "test_heap_storage: " << (test_heap_storage() ? "ok" : "failed") << endl;
             continue;
-        if (query == "test_otono") 
+        }
+        if (query == "test_otono") {
             cout << "test_sqlexec_tables: " << (test_sql_tables() ? "ok" : "failed") << endl;
             cout << "\ntest_sqlexec_indices: " << (test_sql_indices() ? "ok" : "failed") << endl;
             continue;
+        }
 
         // parse and execute
         SQLParserResult *parse = SQLParser::parseSQLString(query);

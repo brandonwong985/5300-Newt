@@ -170,6 +170,18 @@ QueryResult *SQLExec::create_table(const CreateStatement *statement) {
 
 // DROP ...
 QueryResult *SQLExec::drop(const DropStatement *statement) {
+    // checks for 2 conditions -> drop table and drop index
+    switch (statement->type) {
+        case DropStatement::kTable:
+            return drop_table(statement);
+        case DropStatement::kIndex:
+            return drop_index(statement);
+        default:
+            return new QueryResult("not implemented");
+    }
+}
+
+QueryResult *SQLExec::drop_table(const DropStatement *statement) {
     if (statement->type != hsql::DropStatement::kTable){
         throw SQLExecError("Unrecognized DROP type");
     }
@@ -269,16 +281,12 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
      Identifier index_name = statement->indexName;
      Identifier index_type;
      DbIndex &index = SQLExec::indices->get_index(table_name, index_name);  
-     bool unique = true;
+     bool unique = false;
 
      try {
          index_type = statement->indexType;
      }catch (exception& e){
          index_type = "BTREE";
-     }
-
-     if (index_type != "BTREE"){ 
-         unique = false;
      }
 
      ValueDict row;
@@ -288,7 +296,6 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
      row["index_name"] = index_name;
      row["seq_in_index"] = seq;
      row["index_type"] = index_type;
-     row["is_unique"] = unique;
 
      Handles handles;
      try{
@@ -296,6 +303,10 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
              seq += 1;
              row["seq_in_index"] = seq;
              row["column_name"] = Value(col);
+             if (string(index_type) == "BTREE"){
+                 unique = true;
+             }
+             row["is_unique"] = Value(unique);
              handles.push_back(SQLExec::indices->insert(&row));
          }
          // Create index
@@ -339,7 +350,7 @@ QueryResult *SQLExec::show_index(const ShowStatement *statement) {
 }
 
 QueryResult *SQLExec::drop_index(const DropStatement *statement) {
-    Identifier tableName = statement->tableName;
+    Identifier tableName = statement->name;
     Identifier indexName = statement->indexName;
 
     DbIndex &index = SQLExec::indices->get_index(tableName, indexName);
