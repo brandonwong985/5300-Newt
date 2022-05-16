@@ -31,6 +31,9 @@ ostream &operator<<(ostream &out, const QueryResult &qres) {
                     case ColumnAttribute::TEXT:
                         out << "\"" << value.s << "\"";
                         break;
+                    case ColumnAttribute::BOOLEAN:
+                        out << "\"" << (value.b ? "true" : "false") << "\"";
+                        break;
                     default:
                         out << "???";
                 }
@@ -65,6 +68,9 @@ QueryResult *SQLExec::execute(const SQLStatement *statement) {
     // initialize _tables table, if not yet present
     if (SQLExec::tables == nullptr){
         SQLExec::tables = new Tables();
+    }
+
+    if (SQLExec::indices == nullptr){
         SQLExec::indices = new Indices();
     }
 
@@ -281,13 +287,19 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
      Identifier index_name = statement->indexName;
      Identifier index_type;
      DbIndex &index = SQLExec::indices->get_index(table_name, index_name);  
-     bool unique = false;
+     bool unique;
 
      try {
          index_type = statement->indexType;
      }catch (exception& e){
          index_type = "BTREE";
      }
+    
+    if (index_type == "BTREE"){
+        unique = true;
+    }else{
+        unique = false;
+    }
 
      ValueDict row;
      int seq = 0;
@@ -296,17 +308,14 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
      row["index_name"] = index_name;
      row["seq_in_index"] = seq;
      row["index_type"] = index_type;
+     row["is_unique"] = unique;
 
      Handles handles;
      try{
          for (auto const &col: *statement->indexColumns){
              seq += 1;
              row["seq_in_index"] = seq;
-             row["column_name"] = Value(col);
-             if (string(statement->indexType) == "BTREE"){
-                 unique = true;
-             }
-             row["is_unique"] = Value(unique);
+             row["column_name"] = Value(col);           
              handles.push_back(SQLExec::indices->insert(&row));
          }
          // Create index

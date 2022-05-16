@@ -220,12 +220,15 @@ public:
     ColumnAttribute::DataType data_type;
     int32_t n;
     std::string s;
+    bool b;
 
     Value() : n(0) { data_type = ColumnAttribute::INT; }
 
     Value(int32_t n) : n(n) { data_type = ColumnAttribute::INT; }
 
     Value(std::string s) : s(s) { data_type = ColumnAttribute::TEXT; }
+
+    Value(bool b) : b(b) { data_type = ColumnAttribute::BOOLEAN; }
 
     bool operator==(const Value &other) const;
 
