@@ -287,7 +287,7 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
      Identifier index_name = statement->indexName;
      Identifier index_type;
      DbIndex &index = SQLExec::indices->get_index(table_name, index_name);  
-     bool unique;
+     bool unique = false;
 
      try {
          index_type = statement->indexType;
@@ -297,8 +297,6 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
     
     if (index_type == "BTREE"){
         unique = true;
-    }else{
-        unique = false;
     }
 
      ValueDict row;
