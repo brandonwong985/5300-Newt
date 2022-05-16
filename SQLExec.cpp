@@ -342,3 +342,10 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
     return new QueryResult("drop index not implemented");  // FIXME
 }
 
+bool test_sql_tables(){
+    return true;
+}
+
+bool test_sql_indices(){
+    return true;
+}
