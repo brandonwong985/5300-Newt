@@ -303,7 +303,7 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
              seq += 1;
              row["seq_in_index"] = seq;
              row["column_name"] = Value(col);
-             if (string(index_type) == "BTREE"){
+             if (string(statement->indexType) == "BTREE"){
                  unique = true;
              }
              row["is_unique"] = Value(unique);
