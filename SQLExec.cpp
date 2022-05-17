@@ -32,7 +32,7 @@ ostream &operator<<(ostream &out, const QueryResult &qres) {
                         out << "\"" << value.s << "\"";
                         break;
                     case ColumnAttribute::BOOLEAN:
-                        out << "\"" << (value.b ? "true" : "false") << "\"";
+                        out << "\"" << (value.b ? "false" : "true") << "\"";
                         break;
                     default:
                         out << "???";
