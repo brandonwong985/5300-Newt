@@ -110,6 +110,7 @@ void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_
 }
 
 // Execute sql create statements
+// creates a table/index upon request
 QueryResult *SQLExec::create(const CreateStatement *statement) {
     // checks for 2 conditions -> create table and create index
     switch (statement->type) {
@@ -118,11 +119,12 @@ QueryResult *SQLExec::create(const CreateStatement *statement) {
         case CreateStatement::kIndex:
             return create_index(statement);
         default:
-            return new QueryResult("not implemented");
+            return new QueryResult("unknown create type");
     }
 }
 
 // Execute the sql create table statement
+// create a table
 QueryResult *SQLExec::create_table(const CreateStatement *statement) {
     // Updated table schema
     ValueDict row;
@@ -137,7 +139,8 @@ QueryResult *SQLExec::create_table(const CreateStatement *statement) {
 
     DbRelation &table = SQLExec::tables->get_table(table_name); 
     DbRelation &columns = SQLExec::tables->get_table(Columns::TABLE_NAME);  
-    
+
+    // fill column names and column attributes
     for (auto const &col: *statement->columns){
         column_definition((const ColumnDefinition *)col, column_name, column_attribute);
         column_names.push_back(column_name);
@@ -145,7 +148,8 @@ QueryResult *SQLExec::create_table(const CreateStatement *statement) {
     }
 
     try{        
-        // Updated column schema   
+        // Updated column schema
+
         Handles col_handle;   
         for (uint i = 0; i < column_names.size(); i++){
             row["column_name"] = column_names[i];
@@ -397,7 +401,7 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
 
     delete handles;
 
-    return new QueryResult("dropped index " + indexName);  // FIXME
+    return new QueryResult("dropped index " + indexName);
 }
 
 // Tests all implemented sql statements for tables
