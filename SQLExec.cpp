@@ -425,8 +425,8 @@ bool test_sql_tables(){
             "successfully returned 1 rows",
             "successfully returned 3 rows",
             "created foo",
-            "error",
-            "error",
+            "DbRelationError: foo already exists",
+            "DbRelationError: duplicate column goo.x",
             "successfully returned 1 rows",
             "successfully returned 5 rows",
             "dropped foo",
@@ -447,12 +447,14 @@ bool test_sql_tables(){
                     QueryResult *result = SQLExec::execute(statement);
                     assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
 
+                    // this will print out result
                     // cout << "result: " << result->get_message().c_str() << endl;
 
                     delete result;
                 } catch (SQLExecError &e)
                 {
-                    cout << "Error: " << e.what() << endl;
+                    assert(strcmp(e.what().str(), expected_results[i].c_str()) == 0);
+                    cout << "Error: " << e.what().str() << endl;
                 }
 
             }
