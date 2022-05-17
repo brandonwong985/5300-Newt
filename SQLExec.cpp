@@ -4,6 +4,9 @@
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 #include "SQLExec.h"
+#include "ParseTreeToString.h"
+#include <cassert>
+#include <cstring>
 
 using namespace std;
 using namespace hsql;
@@ -32,7 +35,7 @@ ostream &operator<<(ostream &out, const QueryResult &qres) {
                         out << "\"" << value.s << "\"";
                         break;
                     case ColumnAttribute::BOOLEAN:
-                        out << "\"" << (value.b ? "false" : "true") << "\"";
+                        out << (value.n != 0 ? "true" : "false");
                         break;
                     default:
                         out << "???";
@@ -388,5 +391,57 @@ bool test_sql_tables(){
 }
 
 bool test_sql_indices(){
+    string queries [] = {
+        "create table ha (x int, y int, z int)",
+        "create index fx on ha (x,y)",
+        "show index from ha",
+        "drop index fx from ha",
+        "show index from ha",
+        "create index fx on ha (x)",
+        "show index from ha",
+        "create index fyz on ha (y,z)",
+        "show index from ha",
+        "drop index fx from ha",
+        "show index from ha",
+        "drop index fyz from ha",
+        "show index from ha",
+        "drop table ha"
+    };
+
+    string expected_results [] = {
+        "created ha",
+        "created index fx",
+        "successfully returned 2 rows",
+        "dropped index fx",
+        "successfully returned 0 rows",
+        "created index fx",
+        "successfully returned 1 rows",
+        "created index fyz",
+        "successfully returned 3 rows",
+        "dropped index fx",
+        "successfully returned 2 rows",
+        "dropped index fyz",
+        "successfully returned 0 rows",
+        "dropped ha"
+
+    };
+    
+    for (uint i = 0; i < 14; i++){
+        SQLParserResult *parse = SQLParser::parseSQLString(queries[i]);
+
+        if (!parse->isValid()) {
+            return false;
+        } else {
+            for (uint j = 0; j < parse->size(); ++j) {
+                const SQLStatement *statement = parse->getStatement(j);
+                QueryResult *result = SQLExec::execute(statement);
+                assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
+                delete result;           
+            }
+        }
+        delete parse;
+    }
+    
     return true;
+
 }

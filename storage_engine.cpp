@@ -10,8 +10,6 @@ bool Value::operator==(const Value &other) const {
         return false;
     if (this->data_type == ColumnAttribute::INT)
         return this->n == other.n;
-    if (this->data_type == ColumnAttribute::BOOLEAN)
-        return this->b == other.b;
     return this->s == other.s;
 }
 
