@@ -407,62 +407,52 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
 // Tests all implemented sql statements for tables
 bool test_sql_tables(){
     string queries [] = {
-            "show tables",
-            "show columns from _tables",
-            "show columns from _columns",
-            "create table foo (id int, data text, x int, y int, z int)",
-            "create table foo (goober int)",
-            "create table goo (x int, x text)",
-            "show tables",
-            "show columns from foo",
-            "drop table foo",
-            "show tables",
-            "show columns from foo"
+        "show tables",
+        "show columns from _tables",
+        "show columns from _columns",
+        "create table foo (id int, data text, x int, y int, z int)",
+        "create table foo (goober int)",
+        "create table goo (x int, x text)",
+        "show tables",
+        "show columns from foo",
+        "drop table foo",
+        "show tables",
+        "show columns from foo"
     };
 
     string expected_results [] = {
-            "successfully returned 0 rows",
-            "successfully returned 1 rows",
-            "successfully returned 3 rows",
-            "created foo",
-            "DbRelationError: foo already exists",
-            "DbRelationError: duplicate column goo.x",
-            "successfully returned 1 rows",
-            "successfully returned 5 rows",
-            "dropped foo",
-            "successfully returned 0 rows",
-            "successfully returned 0 rows"
+        "successfully returned 0 rows",
+        "successfully returned 1 rows",
+        "successfully returned 3 rows",
+        "created foo",
+        "DbRelationError: foo already exists",
+        "DbRelationError: duplicate column goo.x",
+        "successfully returned 1 rows",
+        "successfully returned 5 rows",
+        "dropped foo",
+        "successfully returned 0 rows",
+        "successfully returned 0 rows"
     };
-
-    for(uint i = 0; i < 11; i++){
+    
+    for (uint i = 0; i < 11; i++){
         SQLParserResult *parse = SQLParser::parseSQLString(queries[i]);
-        if(!parse->isValid()){
-            return false;
-        }else{
 
-            for(uint j = 0; j < parse->size(); j++){
-                try
-                {
+        if (!parse->isValid()) {
+            return false;
+        } else {
+            try{
+                for (uint j = 0; j < parse->size(); ++j) {
                     const SQLStatement *statement = parse->getStatement(j);
                     QueryResult *result = SQLExec::execute(statement);
                     assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
-
-                    // this will print out result
-                    // cout << "result: " << result->get_message().c_str() << endl;
-
-                    delete result;
-                } catch (SQLExecError &e)
-                {
-                    assert(strcmp(e.what(), expected_results[i].c_str()) == 0);
-
-                    // cout << "Error: " << e.what() << endl;
+                    delete result;           
                 }
-
+            } catch (SQLExecError &e){
+                assert(strcmp(e.what(), expected_results[i].c_str()) == 0);
             }
         }
         delete parse;
-    }
-
+    }  
     return true;
 }
 
@@ -475,6 +465,7 @@ bool test_sql_indices(){
         "drop index fx from ha",
         "show index from ha",
         "create index fx on ha (x)",
+        "create index fx on ha (y,z)",
         "show index from ha",
         "create index fyz on ha (y,z)",
         "show index from ha",
@@ -492,6 +483,7 @@ bool test_sql_indices(){
         "dropped index fx",
         "successfully returned 0 rows",
         "created index fx",
+        "DbRelationError: duplicate index ha fx",
         "successfully returned 1 rows",
         "created index fyz",
         "successfully returned 3 rows",
@@ -502,16 +494,21 @@ bool test_sql_indices(){
         "dropped ha"
     };
     
-    for (uint i = 0; i < 14; i++){
+    for (uint i = 0; i < 15; i++){
         SQLParserResult *parse = SQLParser::parseSQLString(queries[i]);
+
         if (!parse->isValid()) {
             return false;
         } else {
-            for (uint j = 0; j < parse->size(); ++j) {
-                const SQLStatement *statement = parse->getStatement(j);
-                QueryResult *result = SQLExec::execute(statement);
-                assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
-                delete result;           
+            try{
+                for (uint j = 0; j < parse->size(); ++j) {
+                    const SQLStatement *statement = parse->getStatement(j);
+                    QueryResult *result = SQLExec::execute(statement);
+                    assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
+                    delete result;           
+                }
+            } catch (SQLExecError &e){
+                assert(strcmp(e.what(), expected_results[i].c_str()) == 0);
             }
         }
         delete parse;
