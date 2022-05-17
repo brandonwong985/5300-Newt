@@ -378,6 +378,7 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
 
     DbIndex &index = SQLExec::indices->get_index(tableName, indexName);
 
+    // first drop the index
     try {
         index.drop();
     } catch (...) {
@@ -385,7 +386,7 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
     }
 
     ValueDict where;
-
+    // then delete the rows
     where["table_name"] = Value(tableName);
     where["index_name"] = Value(indexName);
     Handles *handles = SQLExec::indices->select(&where);
