@@ -453,8 +453,9 @@ bool test_sql_tables(){
                     delete result;
                 } catch (SQLExecError &e)
                 {
-                    assert(strcmp(e.what().str(), expected_results[i].c_str()) == 0);
-                    cout << "Error: " << e.what().str() << endl;
+                    assert(strcmp(e.what(), expected_results[i].c_str()) == 0);
+
+                    // cout << "Error: " << e.what() << endl;
                 }
 
             }
