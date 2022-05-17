@@ -413,6 +413,7 @@ bool test_sql_tables(){
             "create table foo (id int, data text, x int, y int, z int)",
             "create table foo (goober int)",
             "create table goo (x int, x text)",
+            "show tables",
             "show columns from foo",
             "drop table foo",
             "show tables",
@@ -424,11 +425,11 @@ bool test_sql_tables(){
             "successfully returned 1 rows",
             "successfully returned 3 rows",
             "created foo",
-            "created foo",
+            "error",
             "error",
             "successfully returned 1 rows",
             "successfully returned 5 rows",
-            "drop foo",
+            "dropped foo",
             "successfully returned 0 rows",
             "successfully returned 0 rows"
     };
@@ -446,8 +447,7 @@ bool test_sql_tables(){
                     QueryResult *result = SQLExec::execute(statement);
                     // assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
 
-                    cout << "result: " << endl;
-                    cout << result->get_message().c_str() << endl;
+                    cout << "result: " << result->get_message().c_str() << endl;
 
                     delete result;
                 } catch (SQLExecError &e)
