@@ -62,7 +62,7 @@ https://youtu.be/y1HccbCu7nk
 
 Authors: Helen Huang, Yao Yao
 
-**HAND-OFF VIDEO**: 
+**HAND-OFF VIDEO**: https://youtu.be/IS8hS66-qjk
 
 
 **Milestone 3 & 4:**
