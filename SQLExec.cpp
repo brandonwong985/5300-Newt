@@ -444,7 +444,11 @@ bool test_sql_tables(){
                 {
                     const SQLStatement *statement = parse->getStatement(j);
                     QueryResult *result = SQLExec::execute(statement);
-                    assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
+                    // assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
+
+                    cout << "result: " << endl;
+                    cout << result->get_message().c_str() << endl;
+
                     delete result;
                 } catch (SQLExecError &e)
                 {
@@ -503,11 +507,7 @@ bool test_sql_indices(){
             for (uint j = 0; j < parse->size(); ++j) {
                 const SQLStatement *statement = parse->getStatement(j);
                 QueryResult *result = SQLExec::execute(statement);
-
-                cout << "result: " << endl;
-                cout << result->get_message().c_str() << endl;
-
-                // assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
+                assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
                 delete result;           
             }
         }
