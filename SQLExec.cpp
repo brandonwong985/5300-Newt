@@ -438,11 +438,19 @@ bool test_sql_tables(){
         if(!parse->isValid()){
             return false;
         }else{
+
             for(uint j = 0; j < parse->size(); j++){
-                const SQLStatement *statement = parse->getStatement(j);
-                QueryResult *result = SQLExec::execute(statement);
-                assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
-                delete result;
+                try
+                {
+                    const SQLStatement *statement = parse->getStatement(j);
+                    QueryResult *result = SQLExec::execute(statement);
+                    assert(strcmp(result->get_message().c_str(), expected_results[i].c_str()) == 0);
+                    delete result;
+                } catch (SQLExecError &e)
+                {
+                    cout << "Error: " << e.what() << endl;
+                }
+
             }
         }
         delete parse;
