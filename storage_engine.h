@@ -8,6 +8,7 @@
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 #pragma once
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
 #include <exception>
 #include <map>

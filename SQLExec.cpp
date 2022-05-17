@@ -1,6 +1,6 @@
 /**
  * @file SQLExec.cpp - implementation of SQLExec class
- * @author Kevin Lundeen
+ * @author Helen Huang, Yao Yao
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 #include "SQLExec.h"
@@ -15,7 +15,7 @@ using namespace hsql;
 Tables *SQLExec::tables = nullptr;
 Indices *SQLExec::indices = nullptr;
 
-// make query result be printable
+// Make query result be printable
 ostream &operator<<(ostream &out, const QueryResult &qres) {
     if (qres.column_names != nullptr) {
         for (auto const &column_name: *qres.column_names)
@@ -49,6 +49,7 @@ ostream &operator<<(ostream &out, const QueryResult &qres) {
     return out;
 }
 
+// Destructor
 QueryResult::~QueryResult() {
     if (column_names != nullptr){
         delete column_names;
@@ -66,7 +67,7 @@ QueryResult::~QueryResult() {
     }
 }
 
-
+// Execute passed SQL statement
 QueryResult *SQLExec::execute(const SQLStatement *statement) {
     // initialize _tables table, if not yet present
     if (SQLExec::tables == nullptr){
@@ -93,6 +94,7 @@ QueryResult *SQLExec::execute(const SQLStatement *statement) {
     }
 }
 
+// Set the column data type definition
 void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_name, ColumnAttribute &column_attribute) {
     column_name = col->name;
     switch (col->type) {
@@ -107,6 +109,7 @@ void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_
     }
 }
 
+// Execute sql create statements
 QueryResult *SQLExec::create(const CreateStatement *statement) {
     // checks for 2 conditions -> create table and create index
     switch (statement->type) {
@@ -119,6 +122,7 @@ QueryResult *SQLExec::create(const CreateStatement *statement) {
     }
 }
 
+// Execute the sql create table statement
 QueryResult *SQLExec::create_table(const CreateStatement *statement) {
     // Updated table schema
     ValueDict row;
@@ -177,7 +181,7 @@ QueryResult *SQLExec::create_table(const CreateStatement *statement) {
     return new QueryResult("created " + table_name);
 }
 
-// DROP ...
+// Executes the sql drop statement
 QueryResult *SQLExec::drop(const DropStatement *statement) {
     // checks for 2 conditions -> drop table and drop index
     switch (statement->type) {
@@ -190,6 +194,7 @@ QueryResult *SQLExec::drop(const DropStatement *statement) {
     }
 }
 
+// Executes the sql drop table statement
 QueryResult *SQLExec::drop_table(const DropStatement *statement) {
     if (statement->type != hsql::DropStatement::kTable){
         throw SQLExecError("Unrecognized DROP type");
@@ -220,6 +225,7 @@ QueryResult *SQLExec::drop_table(const DropStatement *statement) {
     return new QueryResult(string("dropped ") + table_name);
 }
 
+// Executes the sql show statements
 QueryResult *SQLExec::show(const ShowStatement *statement) {
     // checks for 2 conditions -> show tables and show columns
     switch (statement->type) {
@@ -234,6 +240,7 @@ QueryResult *SQLExec::show(const ShowStatement *statement) {
     }
 }
 
+// Executes the sql show tables statement 
 QueryResult *SQLExec::show_tables() {
     // get all tables
     Handles *handles = SQLExec::tables->select();
@@ -257,6 +264,7 @@ QueryResult *SQLExec::show_tables() {
     return new QueryResult(column_names, new ColumnAttributes(), rows, "successfully returned " + to_string(count) + " rows"); 
 }
 
+// Executes the show columns statement
 QueryResult *SQLExec::show_columns(const ShowStatement *statement) {   
     Identifier table_name = statement->tableName;
     DbRelation &columns = SQLExec::tables->get_table(Columns::TABLE_NAME);   
@@ -285,6 +293,9 @@ QueryResult *SQLExec::show_columns(const ShowStatement *statement) {
     return new QueryResult(column_names, column_attributes, rows,  "successfully returned " + to_string(count) + " rows");
 }
 
+//========================================Indices===========================================
+
+// Executes sql create index statement
 QueryResult *SQLExec::create_index(const CreateStatement *statement) {
      Identifier table_name = statement->tableName;
      Identifier index_name = statement->indexName;
@@ -332,6 +343,7 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
      return new QueryResult("created index " + index_name);
 }
 
+// Executes the sql show index statement
 QueryResult *SQLExec::show_index(const ShowStatement *statement) {
     Identifier table_name = statement->tableName;
     ColumnNames *column_names = new ColumnNames();
@@ -359,6 +371,7 @@ QueryResult *SQLExec::show_index(const ShowStatement *statement) {
     return new QueryResult(column_names, new ColumnAttributes(), rows,  "successfully returned " + to_string(count) + " rows");
 }
 
+// Executes the sql drop index statement 
 QueryResult *SQLExec::drop_index(const DropStatement *statement) {
     Identifier tableName = statement->name;
     Identifier indexName = statement->indexName;
@@ -386,10 +399,12 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
     return new QueryResult("dropped index " + indexName);  // FIXME
 }
 
+// Tests all implemented sql statements for tables
 bool test_sql_tables(){
     return true;
 }
 
+// Tests all implemented sql statements for indices
 bool test_sql_indices(){
     string queries [] = {
         "create table ha (x int, y int, z int)",
@@ -423,12 +438,10 @@ bool test_sql_indices(){
         "dropped index fyz",
         "successfully returned 0 rows",
         "dropped ha"
-
     };
     
     for (uint i = 0; i < 14; i++){
         SQLParserResult *parse = SQLParser::parseSQLString(queries[i]);
-
         if (!parse->isValid()) {
             return false;
         } else {
@@ -440,8 +453,6 @@ bool test_sql_indices(){
             }
         }
         delete parse;
-    }
-    
+    }  
     return true;
-
 }

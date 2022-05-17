@@ -1,6 +1,6 @@
 /**
  * @file SQLExec.h - SQLExec class
- * @author Kevin Lundeen
+ * @author Helen Huang, Yao Yao
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 #pragma once
