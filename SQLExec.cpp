@@ -433,12 +433,12 @@ bool test_sql_tables(){
             "successfully returned 0 rows"
     };
 
-    for(unit i = 0; i < 11; i++){
+    for(uint i = 0; i < 11; i++){
         SQLParserResult *parse = SQLParder::parseSQLString(queries[i]);
         if(!parse->isValid()){
             return false;
         }else{
-            for(unit j = 0; j < parse->size(); j++){
+            for(uint j = 0; j < parse->size(); j++){
                 const SQLStatement *statement = parse->getStatement(j);
                 QueryResult *result = SQLExec::execute(statement);
                 assert(strcmp(result->get_message().c_str(), expected_results[i].c_str) == 0);
