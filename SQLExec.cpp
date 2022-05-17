@@ -406,6 +406,48 @@ QueryResult *SQLExec::drop_index(const DropStatement *statement) {
 
 // Tests all implemented sql statements for tables
 bool test_sql_tables(){
+    string queries [] = {
+            "show tables",
+            "show columns from _tables",
+            "show columns from _columns",
+            "create table foo (id int, data text, x int, y int, z int)",
+            "create table foo (goober int)",
+            "create table goo (x int, x text)",
+            "show columns from foo",
+            "drop table foo",
+            "show tables",
+            "show columns from foo"
+    };
+
+    string expected_results [] = {
+            "successfully returned 0 rows",
+            "successfully returned 1 rows",
+            "successfully returned 3 rows",
+            "created foo",
+            "created foo",
+            "error",
+            "successfully returned 1 rows",
+            "successfully returned 5 rows",
+            "drop foo",
+            "successfully returned 0 rows",
+            "successfully returned 0 rows"
+    };
+
+    for(unit i = 0; i < 11; i++){
+        SQLParserResult *parse = SQLParder::parseSQLString(queries[i]);
+        if(!parse->isValid()){
+            return false;
+        }else{
+            for(unit j = 0; j < parse->size(); j++){
+                const SQLStatement *statement = parse->getStatement(j);
+                QueryResult *result = SQLExec::execute(statement);
+                assert(strcmp(result->get_message().c_str(), expected_results[i].c_str) == 0);
+                delete result;
+            }
+        }
+        delete parse;
+    }
+
     return true;
 }
 
