@@ -70,6 +70,12 @@ Authors: Helen Huang, Yao Yao
 
 This milestone is a C++ program that runs from the command line and allows users to input statement, parsing the input statement into a formatted SQL statement and executing create, drop, show_tables, show_columns, show_indices from existing tables/indices.
 
+If you don't want to manually delete the tables in Berkeley DB, enter:
+<br />
+$ rm -f env_path/*
+<br />
+where env_path is the folder storing all .db files.
+
 To build the program, enter:
 <br />
 $ make
