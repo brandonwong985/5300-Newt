@@ -1,5 +1,8 @@
-# 5300-Instructor
-Instructor's DB Relation Manager project for CPSC5300/4300 at Seattle U, Spring 2022
+# 5300-Newt
+Team Newt's DB Relation Manager project for CPSC5300/4300 at Seattle U, Spring 2022  
+Group Members:  
+* Brandon Wong
+* Diego Hoyos  
 
 Usage (argument is database directory):
 <pre>
