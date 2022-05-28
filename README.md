@@ -1,101 +1,32 @@
-# 5300-Newt
+# 5300-Instructor
+Instructor's DB Relation Manager project for CPSC5300/4300 at Seattle U, Spring 2022
 
-### CPSC 5300 Sprint Verano, Seattle University, Spring 2022
---------------------------------------------------------------
+Usage (argument is database directory):
+<pre>
+$ ./sql5300 ~/cpsc5300/data
+</pre>
 
-Authors: Anh Tran, Sanchita Jain
+## Tags
+- <code>Milestone1</code> is playing around with the AST returned by the HyLine parser and general setup of the command loop.
+- <code>Milestone2h</code> has the intructor-provided files for Milestone2. (Note that heap_storage.cpp is just a stub.)
+- <code>Milestone2</code> is the instructor's attempt to complete the Milestone 2 assignment.
+- <code>Milestone3_prep</code> has the instructor-provided files for Milestone 3. The students' work is in <code>SQLExec.cpp</code> labeled with <code>FIXME</code>.
+- <code>Milestone4_prep</code> has the instructor-provided files for Milestone 4. The students' work is in <code>SQLExec.cpp</code> labeled with <code>FIXME</code>.
+- <code>Milestone4</code> has the instructor's attempt to complete both the Milestone 3 and Milestone 4 assignments.
+- <code>Milestone5_prep</code> has the instructor-provided files for Milestone5.
+## Unit Tests
+There are some tests for SlottedPage and HeapTable. They can be invoked from the <code>SQL</code> prompt:
+```sql
+SQL> test
+```
+Be aware that failed tests may leave garbage Berkeley DB files lingering in your data directory. If you don't care about any data in there, you are advised to just delete them all after a failed test.
+```sh
+$ rm -f data/*
+```
 
-**Milestone 1:**
---------------------------------
-
-This milestone is a C++ program that runs from the command line and allows users to input statement, parsing the input statement into a formatted SQL statement.
-
-To build the program, enter:
-<br />
-$ make
-
-To run the program, enter: 
-<br />
-$ ./sql5300 env_path
-<br />
-where the env_path is the directory holding Berkeley DB database files.
-
-When run, the terminal will appear a SQL entry where users can enter the input statement like below: 
-<br />
-SQL>
-
-To exit the program, enter: 
-<br />
-SQL> quit
-
-Video 
-<br />
-https://youtu.be/XwzkSQ4EcMw
-
-
-**Milestone 2:**
--------------------------------
-This milestone is a C++ program that represents a storage engine made up of three layers: DbBlock, DbFile, and DbRelation and its implementation for the Heap Storage Engine's version of: SlottedPage, HeapFile, and HeapTable.
-
-To build the program, enter:
-<br />
-$ make
-
-To run the tests for this program, enter: 
-<br />
-$ ./test 
-
-To perform a clean run, execute: 
-<br />
-$ make clean
-<br />
-
-Video
-<br />
-https://youtu.be/y1HccbCu7nk 
-
-<br />
-<br />
-
-### CPSC 5300 Sprint Otono, Seattle University, Spring 2022
---------------------------------------------------------------------
-
-Authors: Helen Huang, Yao Yao
-
-**HAND-OFF VIDEO**: https://youtu.be/TvGfcnluW6U
-
-
-**Milestone 3 & 4:**
---------------------------------
-
-This milestone is a C++ program that runs from the command line and allows users to input statement, parsing the input statement into a formatted SQL statement and executing create, drop, show_tables, show_columns, show_indices from existing tables/indices.
-
-If you don't want to manually delete the tables in Berkeley DB, enter:
-<br />
-$ rm -f env_path/*
-<br />
-where env_path is the folder storing all .db files.
-
-To build the program, enter:
-<br />
-$ make
-
-To run the program, enter: 
-<br />
-$ ./sql5300 env_path
-<br />
-where the env_path is the directory holding Berkeley DB database files.
-
-When run, the terminal will appear a SQL entry where users can enter the input statement like below: 
-<br />
-SQL>
-
-To run the tests for milestone 3 and 4, enter:
-<br />
-SQL> test_otono
-
-To exit the program, enter: 
-<br />
-SQL> quit
-
-
+## Valgrind (Linux)
+To run valgrind (files must be compiled with <code>-ggdb</code>):
+```sh
+$ valgrind --leak-check=full --suppressions=valgrind.supp ./sql5300 data
+```
+Note that we've added suppression for the known issues with the Berkeley DB library <em>vis-à-vis</em> valgrind.
