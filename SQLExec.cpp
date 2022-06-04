@@ -4,6 +4,8 @@
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 #include "SQLExec.h"
+#include "ParseTreeToString.h"
+#include "EvalPlan.h"
 
 using namespace std;
 using namespace hsql;
@@ -89,19 +91,177 @@ QueryResult *SQLExec::execute(const SQLStatement *statement) {
 }
 
 QueryResult *SQLExec::insert(const InsertStatement *statement) {
-    return new QueryResult("INSERT statement not yet implemented");  // FIXME
+    // Get the table with the same name
+    Identifier table_name = statement->tableName;
+    DbRelation &table = SQLExec::tables->get_table(table_name);
+
+    // Get column info
+    ColumnNames column_names;
+    if(statement->columns != nullptr)
+    {
+        for(const auto &column : *statement->columns)
+        {
+            column_names.push_back(column);
+        }
+    }
+    else
+    {
+        for(auto const &column : table.get_column_names())
+        {
+            column_names.push_back(column);
+        }
+    }
+
+    // Add the values to a row
+    ValueDict row;
+    unsigned int i = 0;
+    for(auto const &column : *statement->values)
+    {
+        if(column->type == kExprLiteralInt)
+        {
+            row[column_names[i++]] = Value(column->ival);
+        }
+        else if (column->type == kExprLiteralString)
+        {
+            row[column_names[i++]] = Value(column->name);
+        }
+        else
+        {
+            return new QueryResult("Can only insert INT or TEXT");
+        }
+    }
+
+    // Insert into table and update the index
+    Handle insert_handle = table.insert(&row);
+    IndexNames index_names = SQLExec::indices->get_index_names(table_name);
+    for(const auto &index_name : index_names)
+    {
+        DbIndex &index = SQLExec::indices->get_index(table_name, index_name);
+        index.insert(insert_handle);
+    }
+    int index_size = index_names.size();
+    return new QueryResult("Successfully inserted 1 row into " + table_name + " and " + to_string(index_size) + " indices");
+}
+
+ValueDict* SQLExec::get_where_conjunction(const Expr *expr)
+{
+    ValueDict *where = new ValueDict();
+
+    if(expr->type != kExprOperator)
+    {
+        throw DbRelationError("Invalid statement");
+    }
+
+    if(expr->opType == Expr::AND)
+    {
+        // Recursively get the left and right side of AND
+        ValueDict *first = get_where_conjunction(expr->expr);
+        ValueDict *second = get_where_conjunction(expr->expr2);
+        where->insert(first->begin(), first->end());
+        where->insert(second->begin(), second->end());
+        delete first;
+        delete second;
+    }
+    else if(expr->opChar == '=')
+    {
+        Identifier column = expr->expr->name;
+        // Put correct type into where
+        if(expr->expr2->type == kExprLiteralInt)
+        {
+            (*where)[column] = Value(int32_t(expr->expr2->ival));
+        }
+        else if(expr->expr2->type == kExprLiteralString)
+        {
+            (*where)[column] = Value(expr->expr2->name);
+        }
+        else
+        {
+            throw DbRelationError("Unsupported type " + expr->expr2->type);
+        }
+    }
+    return where;
 }
 
 QueryResult *SQLExec::del(const DeleteStatement *statement) {
-    return new QueryResult("DELETE statement not yet implemented");  // FIXME
+    // Get the table with the same name
+    Identifier table_name = statement->tableName;
+    DbRelation &table = SQLExec::tables->get_table(table_name);
+
+    // Get column info
+    ColumnNames column_names;
+    for(const auto &column : table.get_column_names())
+    {
+        column_names.push_back(column);
+    }
+
+    // Create eval plan
+    EvalPlan *plan = new EvalPlan(table);
+    if(statement->expr != nullptr)
+    {
+        plan = new EvalPlan(get_where_conjunction(statement->expr), plan);
+    }
+    EvalPlan *optimized = plan->optimize();
+    delete plan;
+    EvalPipeline pipeline = optimized->pipeline();
+    delete optimized;
+    Handles *handles = pipeline.second;
+
+    // Delete indices first, then table
+    IndexNames index_names = SQLExec::indices->get_index_names(table_name);
+    unsigned int handle_size = handles->size();
+    unsigned int index_size = index_names.size();
+    for(auto const &handle : *handles)
+    {
+        for(auto const index_name : index_names)
+        {
+            DbIndex &index = SQLExec::indices->get_index(table_name, index_name);
+            index.del(handle);
+        }
+        table.del(handle);
+    }
+    delete handles;
+    return new QueryResult("successfully deleted " + to_string(handle_size) + " rows from " + table_name
+        + " and " + to_string(index_size) + " indices");
 }
 
 QueryResult *SQLExec::select(const SelectStatement *statement) {
-    return new QueryResult("SELECT statement not yet implemented");  // FIXME
+    // Get the table with the same name
+    Identifier table_name = statement->fromTable->getName();
+    DbRelation &table = SQLExec::tables->get_table(table_name);
+
+    // Get column info
+    ColumnNames *column_names = new ColumnNames;
+    ColumnAttributes *column_attributes = table.get_column_attributes(*column_names);
+
+    for(auto const &expr : *statement->selectList)
+    {
+        if(expr->type == kExprStar)
+        {
+            ColumnNames col_names = table.get_column_names();
+            for(auto const &col : col_names)
+            {
+                column_names->push_back(col);
+            }
+        }
+        else
+        {
+            column_names->push_back(expr->name);
+        }
+    }
+    // Create eval plan and enclose in a select if we have where clause
+    EvalPlan *plan = new EvalPlan(table);
+    if(statement->whereClause != nullptr)
+    {
+        plan = new EvalPlan(get_where_conjunction(statement->whereClause), plan);
+    }
+    plan = new EvalPlan(column_names, plan);
+    // Evaluate the optimized plan
+    ValueDicts *rows = plan->optimize()->evaluate();
+
+    return new QueryResult(column_names, column_attributes, rows, "successfully returned " + to_string(rows->size()) + " rows");
 }
 
-void
-SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_name, ColumnAttribute &column_attribute) {
+void SQLExec::column_definition(const ColumnDefinition *col, Identifier &column_name, ColumnAttribute &column_attribute) {
     column_name = col->name;
     switch (col->type) {
         case ColumnDefinition::INT:
