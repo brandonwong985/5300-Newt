@@ -2,6 +2,9 @@
  * @file SQLExec.cpp - implementation of SQLExec class
  * @author Kevin Lundeen
  * @see "Seattle University, CPSC5300, Spring 2022"
+ *
+ * Group Newt
+ * Members: Brandon Wong, Diego Hoyos
  */
 #include "SQLExec.h"
 #include "ParseTreeToString.h"
