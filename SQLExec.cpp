@@ -143,7 +143,12 @@ QueryResult *SQLExec::insert(const InsertStatement *statement) {
         index.insert(insert_handle);
     }
     int index_size = index_names.size();
-    return new QueryResult("Successfully inserted 1 row into " + table_name + " and " + to_string(index_size) + " indices");
+    string postfix = "";
+    if(index_size > 0)
+    {
+        postfix += " and " + to_string(index_size) + " indices";
+    }
+    return new QueryResult("Successfully inserted 1 row into " + table_name + postfix);
 }
 
 ValueDict* SQLExec::get_where_conjunction(const Expr *expr)
@@ -223,8 +228,12 @@ QueryResult *SQLExec::del(const DeleteStatement *statement) {
         table.del(handle);
     }
     delete handles;
-    return new QueryResult("successfully deleted " + to_string(handle_size) + " rows from " + table_name
-        + " and " + to_string(index_size) + " indices");
+    string postfix = "";
+    if(index_size > 0)
+    {
+        postfix += " and " + to_string(index_size) + " indices";
+    }
+    return new QueryResult("successfully deleted " + to_string(handle_size) + " rows from " + table_name + postfix);
 }
 
 QueryResult *SQLExec::select(const SelectStatement *statement) {
@@ -377,8 +386,11 @@ QueryResult *SQLExec::create_index(const CreateStatement *statement) {
     } catch (...) {
         // attempt to remove from _indices
         try {  // if any exception happens in the reversal below, we still want to re-throw the original ex
-            for (auto const &handle: i_handles)
+            for (auto const &handle: i_handles) {
+                DbIndex &index = SQLExec::indices->get_index(table_name, index_name);
+                index.drop();
                 SQLExec::indices->del(handle);
+            }
         } catch (...) {}
         throw;  // re-throw the original exception (which should give the client some clue as to why it did
     }
