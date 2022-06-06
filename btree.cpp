@@ -4,6 +4,7 @@
  * @see "Seattle University, CPSC5300, Spring 2022"
  */
 #include "btree.h"
+#include "BTreeNode.h"
 
 BTreeIndex::BTreeIndex(DbRelation &relation, Identifier name, ColumnNames key_columns, bool unique) : DbIndex(relation,
                                                                                                               name,
@@ -70,8 +71,25 @@ void BTreeIndex::close() {
 // Find all the rows whose columns are equal to key. Assumes key is a dictionary whose keys are the column
 // names in the index. Returns a list of row handles.
 Handles *BTreeIndex::lookup(ValueDict *key_dict) const {
-    // FIXME
-    return nullptr;
+    KeyValue *key = tkey(key_dict);
+    return _lookup(root, stat->get_height(), key);
+}
+
+Handles *BTreeIndex::_lookup(BTreeNode *node, uint height, const KeyValue *key) const
+{
+    if(height == 1)
+    {
+        Handles *handles = new Handles;
+        try {
+            handles->push_back(dynamic_cast<BTreeLeaf*>(node)->find_eq(key));
+        }
+        catch(...) {}
+        return handles;
+    }
+    else
+    {
+        return _lookup(dynamic_cast<BTreeInterior*>(node)->find(key, height), height - 1, key);
+    }
 }
 
 Handles *BTreeIndex::range(ValueDict *min_key, ValueDict *max_key) const {
@@ -95,7 +113,7 @@ void BTreeIndex::insert(Handle handle) {
         stat->save();
         delete root;
         root = new_root;
-        std::cout << "new root: " << *new_root << std::endl;
+        //std::cout << "new root: " << *new_root << std::endl;
     }
     delete key;
     delete tkey;
@@ -156,7 +174,7 @@ bool test_btree() {
     row2["b"] = Value(101);
     table.insert(&row1);
     table.insert(&row2);
-    for (int i = 0; i < 100 * 1000; i++) {
+    for (int i = 0; i < 100 * 100; i++) {
         ValueDict row;
         row["a"] = Value(i + 100);
         row["b"] = Value(-i);
