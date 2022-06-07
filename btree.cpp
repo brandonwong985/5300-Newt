@@ -91,7 +91,7 @@ Handles *BTreeIndex::_lookup(BTreeNode *node, uint height, const KeyValue *key) 
         return _lookup(dynamic_cast<BTreeInterior*>(node)->find(key, height), height - 1, key);
     }
 }
-
+// Range not required for this milestone
 Handles *BTreeIndex::range(ValueDict *min_key, ValueDict *max_key) const {
     throw DbRelationError("Don't know how to do a range query on Btree index yet");
     // FIXME
@@ -132,7 +132,7 @@ Insertion BTreeIndex::_insert(BTreeNode *node, uint height, const KeyValue *key,
         return insertion;
     }
 }
-
+// Del not required for this milestone
 void BTreeIndex::del(Handle handle) {
     throw DbRelationError("Don't know how to delete from a BTree index yet");
     // FIXME
@@ -184,7 +184,7 @@ bool test_btree() {
     column_names.push_back("a");
     BTreeIndex index(table, "fooindex", column_names, true);
     index.create();
-    return true;  // FIXME
+    //return true;  // FIXME
 
 
     ValueDict lookup;
@@ -228,7 +228,7 @@ bool test_btree() {
             delete handles;
             delete result;
         }
-
+    return true; // Testing includes btree and lookup, excludes del and range because not required for this milestone
     // test delete
     ValueDict row;
     row["a"] = 44;
