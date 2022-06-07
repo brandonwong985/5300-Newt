@@ -25,7 +25,7 @@ $ make clean
 ## Tags
 - <code>Milestone1</code> is playing around with the AST returned by the HyLine parser and general setup of the command loop.
 - <code>Milestone2</code> This milestone is a C++ program that represents a storage engine made up of three layers: DbBlock, DbFile, and DbRelation and its implementation for the Heap Storage Engine's version of: SlottedPage, HeapFile, and HeapTable.
-- <code>Milestone3</code> This milestone implements the follwoing:
+- <code>Milestone3</code> This milestone implements the following:
     CREATE TABLE
     DROP TABLE
     SHOW TABLES
