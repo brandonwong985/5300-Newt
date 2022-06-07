@@ -1,8 +1,11 @@
 # 5300-Newt
 Team Newt's DB Relation Manager project for CPSC5300/4300 at Seattle U, Spring 2022  
+## Sprint Invierno
 Group Members:  
 * Brandon Wong
 * Diego Hoyos  
+
+**Note:** If tests fail, make sure to remove any existing database files from the database environment before running tests again to ensure successful subsequent testing.
 
 Usage (argument is database directory):
 <pre>
